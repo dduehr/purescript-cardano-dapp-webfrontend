@@ -13,14 +13,14 @@ to generate this file without the comments in this block.
 { name = "my-project"
 , dependencies =
   [ "aff"
+  , "arrays"
   , "console"
   , "datetime"
   , "effect"
+  , "foldable-traversable"
   , "halogen"
-  , "halogen-subscriptions"
   , "maybe"
   , "prelude"
-  , "purescript-cardano-serialization-lib"
   , "purescript-cip30"
   ]
 , packages = ./packages.dhall
