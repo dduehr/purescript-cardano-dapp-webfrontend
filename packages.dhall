@@ -98,9 +98,12 @@ in  upstream
       }
 -------------------------------
 -}
+--let upstream =
+--      https://github.com/purescript/package-sets/releases/download/psc-0.15.4-20221018/packages.dhall
+--        sha256:b1db2e4a17260ace8d17858602f8c56f460982d6e404818d7f6cb9f053324bb1
 let upstream =
-      https://github.com/purescript/package-sets/releases/download/psc-0.15.4-20221018/packages.dhall
-        sha256:b1db2e4a17260ace8d17858602f8c56f460982d6e404818d7f6cb9f053324bb1
+      https://github.com/purescript/package-sets/releases/download/psc-0.15.0-20220504/packages.dhall
+        sha256:fd37736ecaa24491c907af6a6422156417f21fbf25763de19f65bd641e8340d3
 in  upstream
 {-
   with purescript-cip30 =
