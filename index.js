@@ -2385,6 +2385,26 @@
     return dict.liftAff;
   };
 
+  // output/Effect.Console/foreign.js
+  var log = function(s) {
+    return function() {
+      console.log(s);
+    };
+  };
+  var warn = function(s) {
+    return function() {
+      console.warn(s);
+    };
+  };
+
+  // output/Effect.Class.Console/index.js
+  var log2 = function(dictMonadEffect) {
+    var $51 = liftEffect(dictMonadEffect);
+    return function($52) {
+      return $51(log($52));
+    };
+  };
+
   // output/Web.DOM.ParentNode/foreign.js
   var getEffProp = function(name17) {
     return function(node) {
@@ -6132,6 +6152,9 @@
   var HalogenM = function(x) {
     return x;
   };
+  var raise = function(o) {
+    return liftF(new Raise(o, unit));
+  };
   var ordSubscriptionId = ordInt;
   var ordForkId = ordInt;
   var monadHalogenM = freeMonad;
@@ -6429,7 +6452,7 @@
 
   // output/Halogen.HTML/index.js
   var componentSlot2 = /* @__PURE__ */ componentSlot();
-  var slot_ = function() {
+  var slot = function() {
     return function(dictIsSymbol) {
       var componentSlot1 = componentSlot2(dictIsSymbol);
       return function(dictOrd) {
@@ -6438,7 +6461,11 @@
           return function(p2) {
             return function(component3) {
               return function(input3) {
-                return widget(new ComponentSlot(componentSlot22(label5)(p2)(component3)(input3)($$const(Nothing.value))));
+                return function(outputQuery) {
+                  return widget(new ComponentSlot(componentSlot22(label5)(p2)(component3)(input3)(function($11) {
+                    return Just.create(outputQuery($11));
+                  })));
+                };
               };
             };
           };
@@ -6461,18 +6488,6 @@
   };
   var fork2 = function(dict) {
     return dict.fork;
-  };
-
-  // output/Effect.Console/foreign.js
-  var log2 = function(s) {
-    return function() {
-      console.log(s);
-    };
-  };
-  var warn = function(s) {
-    return function() {
-      console.warn(s);
-    };
   };
 
   // output/Halogen.Aff.Driver.State/index.js
@@ -6934,9 +6949,9 @@
           return function(handler3) {
             return function(childrenInRef) {
               return function(childrenOutRef) {
-                return unComponentSlot(function(slot) {
+                return unComponentSlot(function(slot3) {
                   return function __do3() {
-                    var childrenIn = map14(slot.pop)(read(childrenInRef))();
+                    var childrenIn = map14(slot3.pop)(read(childrenInRef))();
                     var $$var2 = function() {
                       if (childrenIn instanceof Just) {
                         write(childrenIn.value0.value1)(childrenInRef)();
@@ -6946,10 +6961,10 @@
                             flip(write)(st.handlerRef)(function() {
                               var $64 = maybe(pure12(unit))(handler3);
                               return function($65) {
-                                return $64(slot.output($65));
+                                return $64(slot3.output($65));
                               };
                             }())();
-                            return handleAff(evalM(render3)(st.selfRef)(st["component"]["eval"](new Receive(slot.input, unit))))();
+                            return handleAff(evalM(render3)(st.selfRef)(st["component"]["eval"](new Receive(slot3.input, unit))))();
                           };
                         })(dsx)();
                         return childrenIn.value0.value0;
@@ -6959,18 +6974,18 @@
                         return runComponent(lchs)(function() {
                           var $66 = maybe(pure12(unit))(handler3);
                           return function($67) {
-                            return $66(slot.output($67));
+                            return $66(slot3.output($67));
                           };
-                        }())(slot.input)(slot.component)();
+                        }())(slot3.input)(slot3.component)();
                       }
                       ;
                       throw new Error("Failed pattern match at Halogen.Aff.Driver (line 213, column 14 - line 222, column 98): " + [childrenIn.constructor.name]);
                     }();
                     var isDuplicate = map14(function($68) {
-                      return isJust(slot.get($68));
+                      return isJust(slot3.get($68));
                     })(read(childrenOutRef))();
                     when2(isDuplicate)(warn("Halogen: Duplicate slot address was detected during rendering, unexpected results may occur"))();
-                    modify_(slot.set($$var2))(childrenOutRef)();
+                    modify_(slot3.set($$var2))(childrenOutRef)();
                     return bind4(read($$var2))(renderStateX2(function(v) {
                       if (v instanceof Nothing) {
                         return $$throw("Halogen internal error: child was not initialized in renderChild");
@@ -7264,36 +7279,36 @@
         var buildWidget2 = function(spec) {
           var buildThunk2 = buildThunk(unwrap2)(spec);
           var $lazy_patch = $runtime_lazy7("patch", "Halogen.VDom.Driver", function() {
-            return function(st, slot) {
+            return function(st, slot3) {
               if (st instanceof Just) {
-                if (slot instanceof ComponentSlot) {
+                if (slot3 instanceof ComponentSlot) {
                   halt(st.value0);
-                  return $lazy_renderComponentSlot(100)(slot.value0);
+                  return $lazy_renderComponentSlot(100)(slot3.value0);
                 }
                 ;
-                if (slot instanceof ThunkSlot) {
-                  var step$prime = step3(st.value0, slot.value0);
+                if (slot3 instanceof ThunkSlot) {
+                  var step$prime = step3(st.value0, slot3.value0);
                   return mkStep(new Step(extract2(step$prime), new Just(step$prime), $lazy_patch(103), done));
                 }
                 ;
-                throw new Error("Failed pattern match at Halogen.VDom.Driver (line 97, column 22 - line 103, column 79): " + [slot.constructor.name]);
+                throw new Error("Failed pattern match at Halogen.VDom.Driver (line 97, column 22 - line 103, column 79): " + [slot3.constructor.name]);
               }
               ;
-              return $lazy_render(104)(slot);
+              return $lazy_render(104)(slot3);
             };
           });
           var $lazy_render = $runtime_lazy7("render", "Halogen.VDom.Driver", function() {
-            return function(slot) {
-              if (slot instanceof ComponentSlot) {
-                return $lazy_renderComponentSlot(86)(slot.value0);
+            return function(slot3) {
+              if (slot3 instanceof ComponentSlot) {
+                return $lazy_renderComponentSlot(86)(slot3.value0);
               }
               ;
-              if (slot instanceof ThunkSlot) {
-                var step4 = buildThunk2(slot.value0);
+              if (slot3 instanceof ThunkSlot) {
+                var step4 = buildThunk2(slot3.value0);
                 return mkStep(new Step(extract2(step4), new Just(step4), $lazy_patch(89), done));
               }
               ;
-              throw new Error("Failed pattern match at Halogen.VDom.Driver (line 84, column 7 - line 89, column 75): " + [slot.constructor.name]);
+              throw new Error("Failed pattern match at Halogen.VDom.Driver (line 84, column 7 - line 89, column 75): " + [slot3.constructor.name]);
             };
           });
           var $lazy_renderComponentSlot = $runtime_lazy7("renderComponentSlot", "Halogen.VDom.Driver", function() {
@@ -7405,14 +7420,6 @@
     return filterA2(isWalletAvailable)(wallets)();
   };
 
-  // output/Effect.Class.Console/index.js
-  var log3 = function(dictMonadEffect) {
-    var $51 = liftEffect(dictMonadEffect);
-    return function($52) {
-      return $51(log2($52));
-    };
-  };
-
   // output/Halogen.HTML.Events/index.js
   var handler2 = function(et) {
     return function(f) {
@@ -7433,6 +7440,16 @@
   var modify5 = /* @__PURE__ */ modify2(monadStateHalogenM);
   var intercalate4 = /* @__PURE__ */ intercalate3(monoidString);
   var discard5 = /* @__PURE__ */ discard(discardUnit)(bindHalogenM);
+  var WalletSelected = /* @__PURE__ */ function() {
+    function WalletSelected2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    WalletSelected2.create = function(value0) {
+      return new WalletSelected2(value0);
+    };
+    return WalletSelected2;
+  }();
   var Initialize2 = /* @__PURE__ */ function() {
     function Initialize3() {
     }
@@ -7447,15 +7464,15 @@
     FindWallets2.value = new FindWallets2();
     return FindWallets2;
   }();
-  var EnableWallet = /* @__PURE__ */ function() {
-    function EnableWallet2(value0) {
+  var SelectWallet = /* @__PURE__ */ function() {
+    function SelectWallet2(value0) {
       this.value0 = value0;
     }
     ;
-    EnableWallet2.create = function(value0) {
-      return new EnableWallet2(value0);
+    SelectWallet2.create = function(value0) {
+      return new SelectWallet2(value0);
     };
-    return EnableWallet2;
+    return SelectWallet2;
   }();
   var tag = function(v) {
     return v;
@@ -7469,13 +7486,13 @@
       var renderWallet = function(wallet) {
         var walletId = tag(wallet.id);
         return span_([input([type_19(InputRadio.value), name15("wallet"), id2(walletId), value13(walletId), onChange(function(v1) {
-          return new EnableWallet(wallet.id);
+          return new SelectWallet(wallet.id);
         })]), label4([$$for(walletId)])([img([src9(wallet.icon), width8(24), height8(24)]), text5(wallet.name + (" (" + (walletId + ")")))])]);
       };
       return div_(map17(renderWallet)(v.value0));
     }
     ;
-    throw new Error("Failed pattern match at Wallets (line 46, column 1 - line 46, column 57): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Wallets (line 53, column 1 - line 53, column 57): " + [v.constructor.name]);
   };
   var mkWallet = function(walletName) {
     return function __do3() {
@@ -7496,7 +7513,7 @@
   var handleAction = function(dictMonadAff) {
     var monadEffectHalogenM2 = monadEffectHalogenM(dictMonadAff.MonadEffect0());
     var liftEffect7 = liftEffect(monadEffectHalogenM2);
-    var log4 = log3(monadEffectHalogenM2);
+    var log4 = log2(monadEffectHalogenM2);
     return function(v) {
       if (v instanceof Initialize2) {
         return bind15(fork(delayAction(dictMonadAff)(FindWallets.value)(1e3)))(function() {
@@ -7518,11 +7535,13 @@
         });
       }
       ;
-      if (v instanceof EnableWallet) {
-        return log4("TODO: enable wallet " + tag(v.value0));
+      if (v instanceof SelectWallet) {
+        return discard5(raise(new WalletSelected(v.value0)))(function() {
+          return log4("wallet " + (tag(v.value0) + " selected"));
+        });
       }
       ;
-      throw new Error("Failed pattern match at Wallets (line 69, column 16 - line 81, column 51): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at Wallets (line 76, column 16 - line 89, column 53): " + [v.constructor.name]);
     };
   };
   var delayAction = function(dictMonadAff) {
@@ -7550,23 +7569,45 @@
   };
 
   // output/Main/index.js
-  var slot_2 = /* @__PURE__ */ slot_()({
+  var slot2 = /* @__PURE__ */ slot()({
     reflectSymbol: function() {
       return "wallets";
     }
   })(ordUnit);
   var identity9 = /* @__PURE__ */ identity(categoryFn);
+  var HandleWallets = /* @__PURE__ */ function() {
+    function HandleWallets2(value0) {
+      this.value0 = value0;
+    }
+    ;
+    HandleWallets2.create = function(value0) {
+      return new HandleWallets2(value0);
+    };
+    return HandleWallets2;
+  }();
   var render2 = function(dictMonadAff) {
     var component22 = component(dictMonadAff);
     return function(v) {
-      return div_([slot_2($$Proxy.value)(unit)(component22)(unit)]);
+      return div_([slot2($$Proxy.value)(unit)(component22)(unit)(HandleWallets.create)]);
+    };
+  };
+  var handleAction2 = function(dictMonadEffect) {
+    var log4 = log2(monadEffectHalogenM(dictMonadEffect));
+    return function(v) {
+      return log4("From parent: TODO enable wallet " + tag(v.value0.value0));
     };
   };
   var component2 = function(dictMonadAff) {
     return mkComponent({
       initialState: identity9,
       render: render2(dictMonadAff),
-      "eval": mkEval(defaultEval)
+      "eval": mkEval({
+        handleAction: handleAction2(dictMonadAff.MonadEffect0()),
+        handleQuery: defaultEval.handleQuery,
+        receive: defaultEval.receive,
+        initialize: defaultEval.initialize,
+        finalize: defaultEval.finalize
+      })
     });
   };
   var component1 = /* @__PURE__ */ component2(monadAffAff);

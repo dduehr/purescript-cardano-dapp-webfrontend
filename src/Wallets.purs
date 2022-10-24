@@ -1,4 +1,9 @@
-module Wallets (component) where
+module Wallets
+  ( Output(..)
+  , component
+  , tag
+  )
+  where
 
 import Prelude (Unit, unit, bind, discard, pure, ($), (<>), (<$>), (/=))
 
@@ -18,6 +23,10 @@ import Halogen.HTML.Properties as HP
 import Cardano.Wallet (WalletName(..))
 import Cardano.Wallet (apiVersion, name, icon, availableWallets) as CW
 
+data Output = WalletSelected WalletName
+
+type State = Maybe (Array Wallet)
+
 type Wallet = 
   { id :: WalletName
   , name :: String
@@ -25,11 +34,9 @@ type Wallet =
   , icon :: String
   }
 
-type State = Maybe (Array Wallet)
+data Action = Initialize | FindWallets | SelectWallet WalletName
 
-data Action = Initialize | FindWallets | EnableWallet WalletName
-
-component :: forall query output m. MonadAff m => H.Component query Unit output m
+component :: forall query m. MonadAff m => H.Component query Unit Output m
 component =
   H.mkComponent
     { initialState
@@ -57,7 +64,7 @@ render (Just wallets) =
         walletId = tag wallet.id
       in
         HH.span_
-          [ HH.input [ HP.type_ HP.InputRadio, HP.name "wallet", HP.id walletId, HP.value walletId, HE.onChange \_ -> EnableWallet wallet.id ] 
+          [ HH.input [ HP.type_ HP.InputRadio, HP.name "wallet", HP.id walletId, HP.value walletId, HE.onChange \_ -> SelectWallet wallet.id ] 
           , HH.label
             [ HP.for walletId ] 
             [ HH.img [ HP.src wallet.icon, HP.width 24, HP.height 24 ]
@@ -65,7 +72,7 @@ render (Just wallets) =
             ]
           ]
 
-handleAction :: forall output m. MonadAff m => Action -> H.HalogenM State Action () output m Unit
+handleAction :: forall m. MonadAff m => Action -> H.HalogenM State Action () Output m Unit
 handleAction = case _ of
   Initialize -> do
     _ <- H.fork $ delayAction FindWallets $ Milliseconds 1000.0 
@@ -77,10 +84,11 @@ handleAction = case _ of
     _ <- H.modify \_ -> Just wallets
     log $ "wallets " <> intercalate ", " (tag <$> walletNames) <> " found"
 
-  EnableWallet walletName -> do
-    log $ "TODO: enable wallet " <> tag walletName
+  SelectWallet walletName -> do
+    H.raise $ WalletSelected walletName
+    log $ "wallet " <> tag walletName <> " selected"
 
-delayAction :: forall output m. MonadAff m => Action -> Milliseconds -> H.HalogenM State Action () output m Unit
+delayAction :: forall m. MonadAff m => Action -> Milliseconds -> H.HalogenM State Action () Output m Unit
 delayAction action ms = do
     H.liftAff $ Aff.delay ms
     handleAction action
