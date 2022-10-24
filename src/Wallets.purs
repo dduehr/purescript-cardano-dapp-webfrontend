@@ -21,7 +21,7 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 
 import Cardano.Wallet (WalletName(..))
-import Cardano.Wallet (apiVersion, name, icon, availableWallets) as CW
+import Cardano.Wallet (getApiVersion, getName, getIcon, availableWallets) as CW
 
 data Output = WalletSelected WalletName
 
@@ -80,13 +80,15 @@ handleAction = case _ of
 
   FindWallets -> do
     walletNames <- H.liftEffect $ CW.availableWallets
+    log $ "wallets found: " <> intercalate ", " (tag <$> walletNames)
     wallets <- H.liftEffect $ traverse mkWallet $ filter (\walletName -> tag walletName /= "ccvault") walletNames
     _ <- H.modify \_ -> Just wallets
-    log $ "wallets " <> intercalate ", " (tag <$> walletNames) <> " found"
+    pure unit
 
   SelectWallet walletName -> do
+    log $ "wallet selected: " <> tag walletName
     H.raise $ WalletSelected walletName
-    log $ "wallet " <> tag walletName <> " selected"
+    pure unit
 
 delayAction :: forall m. MonadAff m => Action -> Milliseconds -> H.HalogenM State Action () Output m Unit
 delayAction action ms = do
@@ -95,10 +97,15 @@ delayAction action ms = do
 
 mkWallet :: WalletName -> Effect Wallet
 mkWallet walletName = do
-  apiVersion <- CW.apiVersion walletName
-  name <- CW.name walletName
-  icon <- CW.icon walletName
-  pure $ { id: walletName, name: name, apiVersion: apiVersion, icon: icon }
+  apiVersion <- CW.getApiVersion walletName
+  name <- CW.getName walletName
+  icon <- CW.getIcon walletName
+  pure 
+    { id: walletName
+    , name: name
+    , apiVersion: apiVersion
+    , icon: icon
+    }
 
 tag :: WalletName -> String
 tag (WalletName _tag) = _tag
