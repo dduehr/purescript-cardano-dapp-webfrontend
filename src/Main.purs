@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Prelude (Unit, ($), (<>), (>>=), bind, discard, const, pure, show, unit)
+import Prelude (Unit, ($), (<>), (<$>), (>>=), bind, discard, const, pure, show, unit)
 
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
@@ -77,8 +77,7 @@ renderWallet (Just wallet) =
       ]
     , HH.div_
       [ HH.p_ [ HH.text "UTXOs:" ]
-      , HH.ul_
-        [ HH.li_ [ HH.text "TODO"] ]
+      , renderUtxos wallet.utxos
       ]
     , HH.div_
       [ HH.p_ [ HH.text $ "Balance: " <> wallet.balance ]
@@ -100,50 +99,29 @@ renderUsedAddresses Nothing =
 renderUsedAddresses (Just usedAddresses) =
   HH.text $ show usedAddresses
 
+renderUtxos :: forall widget input. Maybe (Array Cbor) -> HH.HTML widget input
+renderUtxos Nothing =
+  HH.text "Loading ..."
+renderUtxos (Just utxos) =
+  HH.ul_ $ (\utxo -> HH.li_ [ HH.text $ show utxo ]) <$> utxos
+
 handleAction :: forall output m. MonadAff m => Action -> H.HalogenM State Action Slots output m Unit
 handleAction = case _ of
   HandleWallets (Wallets.WalletSelected walletName) -> do
-    _ <- H.modify \_ -> Nothing
+    H.put Nothing
     wallet <- H.liftAff $ enableWallet walletName
-    _ <- H.modify \_ -> Just wallet
     log $ "wallet enabled: " <> Wallets.tag walletName
-    _ <- H.fork getRewardAddresses
-    _ <- H.fork getUsedAddresses
-    _ <- H.fork getUtxos
+    H.put $ Just wallet
+    rewardAddresses <- liftAff $ CW.getRewardAddresses wallet.api
+    log $ "got reward addresses: " <> show rewardAddresses
+    _ <- H.modify \maybeWallet -> _ { rewardAddresses = Just rewardAddresses } <$> maybeWallet
+    usedAddresses <- liftAff $ CW.getUsedAddresses wallet.api { limit: 10, page: 0 }
+    log $ "got used addresses: " <> show usedAddresses
+    _ <- H.modify \maybeWallet -> _ { usedAddresses = Just usedAddresses } <$> maybeWallet
+    utxos <- liftAff $ CW.getUtxos wallet.api Nothing
+    log $ "got utxos: " <> show utxos
+    _ <- H.modify \maybeWallet -> _ { utxos = Just utxos } <$> maybeWallet
     pure unit
-
-getRewardAddresses :: forall output m. MonadAff m => H.HalogenM State Action Slots output m Unit
-getRewardAddresses =
-  H.get >>= case _ of
-    Just wallet -> do
-      rewardAddresses <- liftAff $ CW.getRewardAddresses wallet.api
-      log $ "got reward addresses: " <> show rewardAddresses
-      _ <- H.modify \_ -> Just $ wallet { rewardAddresses = Just rewardAddresses }
-      pure unit
-    _ ->
-      pure unit
-
-getUsedAddresses :: forall output m. MonadAff m => H.HalogenM State Action Slots output m Unit
-getUsedAddresses =
-  H.get >>= case _ of
-    Just wallet -> do
-      usedAddresses <- liftAff $ CW.getUsedAddresses wallet.api { limit: 10, page: 0 }
-      log $ "got used addresses: " <> show usedAddresses
-      _ <- H.modify \_ -> Just $ wallet { usedAddresses = Just usedAddresses }
-      pure unit
-    _ ->
-      pure unit
-
-getUtxos :: forall output m. MonadAff m => H.HalogenM State Action Slots output m Unit
-getUtxos =
-  H.get >>= case _ of
-    Just wallet -> do
-      utxos <- liftAff $ CW.getUtxos wallet.api Nothing
-      log $ "got utxos: " <> show utxos
-      _ <- H.modify \_ -> Just $ wallet { utxos = Just utxos }
-      pure unit
-    _ ->
-      pure unit
 
 enableWallet :: WalletName -> Aff Wallet
 enableWallet walletName = do

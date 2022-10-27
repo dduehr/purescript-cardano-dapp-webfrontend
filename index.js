@@ -9,7 +9,7 @@
   var _getNetworkId = (api) => () => api.getNetworkId();
   var _getRewardAddresses = (api) => () => api.getRewardAddresses();
   var _getUsedAddresses = (api) => (page) => () => api.getUsedAddresses(page);
-  var _getUtxos = (api) => (paginate) => () => api.getUtxos(paginate);
+  var _getUtxos = (api) => (paginate) => () => api.getUtxos(paginate != null ? paginate : void 0);
   var isWalletAvailable = (walletName) => () => typeof window.cardano != "undefined" && typeof window.cardano[walletName] != "undefined" && typeof window.cardano[walletName].apiVersion != "undefined" && typeof window.cardano[walletName].enable == "function";
   var allWalletTags = () => typeof window.cardano != "undefined" ? Object.keys(window.cardano).filter((tag2) => typeof window.cardano[tag2] == "object") : [];
 
@@ -97,17 +97,17 @@
     return map(dictFunctor)($$const(unit));
   };
   var voidLeft = function(dictFunctor) {
-    var map110 = map(dictFunctor);
+    var map111 = map(dictFunctor);
     return function(f) {
       return function(x) {
-        return map110($$const(x))(f);
+        return map111($$const(x))(f);
       };
     };
   };
   var voidRight = function(dictFunctor) {
-    var map110 = map(dictFunctor);
+    var map111 = map(dictFunctor);
     return function(x) {
-      return map110($$const(x));
+      return map111($$const(x));
     };
   };
   var functorArray = {
@@ -192,10 +192,10 @@
   };
   var applySecond = function(dictApply) {
     var apply1 = apply(dictApply);
-    var map21 = map(dictApply.Functor0());
+    var map23 = map(dictApply.Functor0());
     return function(a2) {
       return function(b2) {
-        return apply1(map21($$const(identity2))(a2))(b2);
+        return apply1(map23($$const(identity2))(a2))(b2);
       };
     };
   };
@@ -715,10 +715,10 @@
   var $$try = function(dictMonadError) {
     var catchError1 = catchError(dictMonadError);
     var Monad0 = dictMonadError.MonadThrow0().Monad0();
-    var map21 = map(Monad0.Bind1().Apply0().Functor0());
+    var map23 = map(Monad0.Bind1().Apply0().Functor0());
     var pure10 = pure(Monad0.Applicative0());
     return function(a2) {
-      return catchError1(map21(Right.create)(a2))(function($52) {
+      return catchError1(map23(Right.create)(a2))(function($52) {
         return pure10(Left.create($52));
       });
     };
@@ -1044,6 +1044,14 @@
   var state = function(dict) {
     return dict.state;
   };
+  var put = function(dictMonadState) {
+    var state1 = state(dictMonadState);
+    return function(s) {
+      return state1(function(v) {
+        return new Tuple(unit, s);
+      });
+    };
+  };
   var modify2 = function(dictMonadState) {
     var state1 = state(dictMonadState);
     return function(f) {
@@ -1052,11 +1060,6 @@
         return new Tuple(s$prime, s$prime);
       });
     };
-  };
-  var get = function(dictMonadState) {
-    return state(dictMonadState)(function(s) {
-      return new Tuple(s, s);
-    });
   };
 
   // output/Effect.Class/index.js
@@ -1084,10 +1087,10 @@
     };
   };
   var functorExceptT = function(dictFunctor) {
-    var map110 = map(dictFunctor);
+    var map111 = map(dictFunctor);
     return {
       map: function(f) {
-        return mapExceptT(map110(map4(f)));
+        return mapExceptT(map111(map4(f)));
       }
     };
   };
@@ -1405,7 +1408,7 @@
       };
     }
     return function(apply2) {
-      return function(map21) {
+      return function(map23) {
         return function(pure10) {
           return function(f) {
             return function(array) {
@@ -1414,14 +1417,14 @@
                   case 0:
                     return pure10([]);
                   case 1:
-                    return map21(array1)(f(array[bot]));
+                    return map23(array1)(f(array[bot]));
                   case 2:
-                    return apply2(map21(array2)(f(array[bot])))(f(array[bot + 1]));
+                    return apply2(map23(array2)(f(array[bot])))(f(array[bot + 1]));
                   case 3:
-                    return apply2(apply2(map21(array3)(f(array[bot])))(f(array[bot + 1])))(f(array[bot + 2]));
+                    return apply2(apply2(map23(array3)(f(array[bot])))(f(array[bot + 1])))(f(array[bot + 2]));
                   default:
                     var pivot = bot + Math.floor((top2 - bot) / 4) * 2;
-                    return apply2(map21(concat2)(go2(bot, pivot)))(go2(pivot, top2));
+                    return apply2(map23(concat2)(go2(bot, pivot)))(go2(pivot, top2));
                 }
               }
               return go2(0, array.length);
@@ -6382,18 +6385,18 @@
   };
   var foldFree = function(dictMonadRec) {
     var Monad0 = dictMonadRec.Monad0();
-    var map110 = map(Monad0.Bind1().Apply0().Functor0());
+    var map111 = map(Monad0.Bind1().Apply0().Functor0());
     var pure15 = pure(Monad0.Applicative0());
     var tailRecM4 = tailRecM(dictMonadRec);
     return function(k) {
       var go2 = function(f) {
         var v = toView(f);
         if (v instanceof Return) {
-          return map110(Done.create)(pure15(v.value0));
+          return map111(Done.create)(pure15(v.value0));
         }
         ;
         if (v instanceof Bind) {
-          return map110(function($199) {
+          return map111(function($199) {
             return Loop.create(v.value1($199));
           })(k(v.value0));
         }
@@ -8001,21 +8004,24 @@
   };
 
   // output/Main/index.js
-  var show2 = /* @__PURE__ */ show(/* @__PURE__ */ showArray(showString));
-  var show1 = /* @__PURE__ */ show(showInt);
+  var map21 = /* @__PURE__ */ map(functorArray);
+  var show2 = /* @__PURE__ */ show(showString);
+  var show1 = /* @__PURE__ */ show(/* @__PURE__ */ showArray(showString));
+  var show22 = /* @__PURE__ */ show(showInt);
   var slot2 = /* @__PURE__ */ slot()({
     reflectSymbol: function() {
       return "wallets";
     }
   })(ordUnit);
-  var bind6 = /* @__PURE__ */ bind(bindHalogenM);
-  var get2 = /* @__PURE__ */ get(monadStateHalogenM);
-  var discard6 = /* @__PURE__ */ discard(discardUnit)(bindHalogenM);
-  var modify6 = /* @__PURE__ */ modify2(monadStateHalogenM);
-  var pure9 = /* @__PURE__ */ pure(applicativeHalogenM);
-  var bind16 = /* @__PURE__ */ bind(bindAff);
+  var bind6 = /* @__PURE__ */ bind(bindAff);
   var liftEffect8 = /* @__PURE__ */ liftEffect(monadEffectAff);
-  var pure14 = /* @__PURE__ */ pure(applicativeAff);
+  var pure9 = /* @__PURE__ */ pure(applicativeAff);
+  var discard6 = /* @__PURE__ */ discard(discardUnit)(bindHalogenM);
+  var put2 = /* @__PURE__ */ put(monadStateHalogenM);
+  var bind16 = /* @__PURE__ */ bind(bindHalogenM);
+  var modify6 = /* @__PURE__ */ modify2(monadStateHalogenM);
+  var map110 = /* @__PURE__ */ map(functorMaybe);
+  var pure14 = /* @__PURE__ */ pure(applicativeHalogenM);
   var HandleWallets = /* @__PURE__ */ function() {
     function HandleWallets2(value0) {
       this.value0 = value0;
@@ -8026,16 +8032,29 @@
     };
     return HandleWallets2;
   }();
+  var renderUtxos = function(v) {
+    if (v instanceof Nothing) {
+      return text5("Loading ...");
+    }
+    ;
+    if (v instanceof Just) {
+      return ul_(map21(function(utxo) {
+        return li_([text5(show2(utxo))]);
+      })(v.value0));
+    }
+    ;
+    throw new Error("Failed pattern match at Main (line 102, column 1 - line 102, column 79): " + [v.constructor.name]);
+  };
   var renderUsedAddresses = function(v) {
     if (v instanceof Nothing) {
       return text5("Loading ...");
     }
     ;
     if (v instanceof Just) {
-      return text5(show2(v.value0));
+      return text5(show1(v.value0));
     }
     ;
-    throw new Error("Failed pattern match at Main (line 97, column 1 - line 97, column 87): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Main (line 96, column 1 - line 96, column 87): " + [v.constructor.name]);
   };
   var renderRewardAddresses = function(v) {
     if (v instanceof Nothing) {
@@ -8043,10 +8062,10 @@
     }
     ;
     if (v instanceof Just) {
-      return text5(show2(v.value0));
+      return text5(show1(v.value0));
     }
     ;
-    throw new Error("Failed pattern match at Main (line 91, column 1 - line 91, column 89): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at Main (line 90, column 1 - line 90, column 89): " + [v.constructor.name]);
   };
   var renderWallet = function(v) {
     if (v instanceof Nothing) {
@@ -8054,7 +8073,7 @@
     }
     ;
     if (v instanceof Just) {
-      return div_([div_([p_([text5("Wallet name: " + v.value0.name)]), p_([text5("Wallet API Version: " + v.value0.apiVersion)]), p_([text5("Network Id (0 = testnet; 1 = mainnet): " + show1(v.value0.networkId))])]), div_([p_([text5("UTXOs:")]), ul_([li_([text5("TODO")])])]), div_([p_([text5("Balance: " + v.value0.balance)]), p_([text5("Change Address: " + v.value0.changeAddress)]), p_([text5("Reward Addresses: "), renderRewardAddresses(v.value0.rewardAddresses)]), p_([text5("Used Addresses: "), renderUsedAddresses(v.value0.usedAddresses)])])]);
+      return div_([div_([p_([text5("Wallet name: " + v.value0.name)]), p_([text5("Wallet API Version: " + v.value0.apiVersion)]), p_([text5("Network Id (0 = testnet; 1 = mainnet): " + show22(v.value0.networkId))])]), div_([p_([text5("UTXOs:")]), renderUtxos(v.value0.utxos)]), div_([p_([text5("Balance: " + v.value0.balance)]), p_([text5("Change Address: " + v.value0.changeAddress)]), p_([text5("Reward Addresses: "), renderRewardAddresses(v.value0.rewardAddresses)]), p_([text5("Used Addresses: "), renderUsedAddresses(v.value0.usedAddresses)])])]);
     }
     ;
     throw new Error("Failed pattern match at Main (line 67, column 1 - line 67, column 74): " + [v.constructor.name]);
@@ -8065,107 +8084,14 @@
       return div_([h1_([text5("Boilerplate DApp Connector to Wallet")]), div_([p_([text5("Select wallet:")]), slot2($$Proxy.value)(unit)(component22)(unit)(HandleWallets.create)]), renderWallet(state3)]);
     };
   };
-  var getUtxos2 = function(dictMonadAff) {
-    var liftAff2 = liftAff(monadAffHalogenM(dictMonadAff));
-    var log4 = log3(monadEffectHalogenM(dictMonadAff.MonadEffect0()));
-    return bind6(get2)(function(v) {
-      if (v instanceof Just) {
-        return bind6(liftAff2(getUtxos(v.value0.api)(Nothing.value)))(function(utxos) {
-          return discard6(log4("got utxos: " + show2(utxos)))(function() {
-            return bind6(modify6(function(v1) {
-              return new Just(function() {
-                var $73 = {};
-                for (var $74 in v.value0) {
-                  if ({}.hasOwnProperty.call(v.value0, $74)) {
-                    $73[$74] = v["value0"][$74];
-                  }
-                  ;
-                }
-                ;
-                $73.utxos = new Just(utxos);
-                return $73;
-              }());
-            }))(function() {
-              return pure9(unit);
-            });
-          });
-        });
-      }
-      ;
-      return pure9(unit);
-    });
-  };
-  var getUsedAddresses2 = function(dictMonadAff) {
-    var liftAff2 = liftAff(monadAffHalogenM(dictMonadAff));
-    var log4 = log3(monadEffectHalogenM(dictMonadAff.MonadEffect0()));
-    return bind6(get2)(function(v) {
-      if (v instanceof Just) {
-        return bind6(liftAff2(getUsedAddresses(v.value0.api)({
-          limit: 10,
-          page: 0
-        })))(function(usedAddresses) {
-          return discard6(log4("got used addresses: " + show2(usedAddresses)))(function() {
-            return bind6(modify6(function(v1) {
-              return new Just(function() {
-                var $78 = {};
-                for (var $79 in v.value0) {
-                  if ({}.hasOwnProperty.call(v.value0, $79)) {
-                    $78[$79] = v["value0"][$79];
-                  }
-                  ;
-                }
-                ;
-                $78.usedAddresses = new Just(usedAddresses);
-                return $78;
-              }());
-            }))(function() {
-              return pure9(unit);
-            });
-          });
-        });
-      }
-      ;
-      return pure9(unit);
-    });
-  };
-  var getRewardAddresses2 = function(dictMonadAff) {
-    var liftAff2 = liftAff(monadAffHalogenM(dictMonadAff));
-    var log4 = log3(monadEffectHalogenM(dictMonadAff.MonadEffect0()));
-    return bind6(get2)(function(v) {
-      if (v instanceof Just) {
-        return bind6(liftAff2(getRewardAddresses(v.value0.api)))(function(rewardAddresses) {
-          return discard6(log4("got reward addresses: " + show2(rewardAddresses)))(function() {
-            return bind6(modify6(function(v1) {
-              return new Just(function() {
-                var $83 = {};
-                for (var $84 in v.value0) {
-                  if ({}.hasOwnProperty.call(v.value0, $84)) {
-                    $83[$84] = v["value0"][$84];
-                  }
-                  ;
-                }
-                ;
-                $83.rewardAddresses = new Just(rewardAddresses);
-                return $83;
-              }());
-            }))(function() {
-              return pure9(unit);
-            });
-          });
-        });
-      }
-      ;
-      return pure9(unit);
-    });
-  };
   var enableWallet = function(walletName) {
-    return bind16(liftEffect8(getName(walletName)))(function(name16) {
-      return bind16(liftEffect8(getApiVersion(walletName)))(function(apiVersion) {
-        return bind16(enable(walletName))(function(api) {
-          return bind16(getNetworkId(api))(function(networkId) {
-            return bind16(getBalance(api))(function(balance) {
-              return bind16(getChangeAddress(api))(function(changeAddress) {
-                return pure14({
+    return bind6(liftEffect8(getName(walletName)))(function(name16) {
+      return bind6(liftEffect8(getApiVersion(walletName)))(function(apiVersion) {
+        return bind6(enable(walletName))(function(api) {
+          return bind6(getNetworkId(api))(function(networkId) {
+            return bind6(getBalance(api))(function(balance) {
+              return bind6(getChangeAddress(api))(function(changeAddress) {
+                return pure9({
                   id: walletName,
                   name: name16,
                   apiVersion,
@@ -8187,22 +8113,69 @@
   var handleAction2 = function(dictMonadAff) {
     var liftAff2 = liftAff(monadAffHalogenM(dictMonadAff));
     var log4 = log3(monadEffectHalogenM(dictMonadAff.MonadEffect0()));
-    var getRewardAddresses1 = getRewardAddresses2(dictMonadAff);
-    var getUsedAddresses1 = getUsedAddresses2(dictMonadAff);
-    var getUtxos1 = getUtxos2(dictMonadAff);
     return function(v) {
-      return bind6(modify6(function(v1) {
-        return Nothing.value;
-      }))(function() {
-        return bind6(liftAff2(enableWallet(v.value0.value0)))(function(wallet) {
-          return bind6(modify6(function(v1) {
-            return new Just(wallet);
-          }))(function() {
-            return discard6(log4("wallet enabled: " + tag(v.value0.value0)))(function() {
-              return bind6(fork(getRewardAddresses1))(function() {
-                return bind6(fork(getUsedAddresses1))(function() {
-                  return bind6(fork(getUtxos1))(function() {
-                    return pure9(unit);
+      return discard6(put2(Nothing.value))(function() {
+        return bind16(liftAff2(enableWallet(v.value0.value0)))(function(wallet) {
+          return discard6(log4("wallet enabled: " + tag(v.value0.value0)))(function() {
+            return discard6(put2(new Just(wallet)))(function() {
+              return bind16(liftAff2(getRewardAddresses(wallet.api)))(function(rewardAddresses) {
+                return discard6(log4("got reward addresses: " + show1(rewardAddresses)))(function() {
+                  return bind16(modify6(function(maybeWallet) {
+                    return map110(function(v1) {
+                      var $50 = {};
+                      for (var $51 in v1) {
+                        if ({}.hasOwnProperty.call(v1, $51)) {
+                          $50[$51] = v1[$51];
+                        }
+                        ;
+                      }
+                      ;
+                      $50.rewardAddresses = new Just(rewardAddresses);
+                      return $50;
+                    })(maybeWallet);
+                  }))(function() {
+                    return bind16(liftAff2(getUsedAddresses(wallet.api)({
+                      limit: 10,
+                      page: 0
+                    })))(function(usedAddresses) {
+                      return discard6(log4("got used addresses: " + show1(usedAddresses)))(function() {
+                        return bind16(modify6(function(maybeWallet) {
+                          return map110(function(v1) {
+                            var $53 = {};
+                            for (var $54 in v1) {
+                              if ({}.hasOwnProperty.call(v1, $54)) {
+                                $53[$54] = v1[$54];
+                              }
+                              ;
+                            }
+                            ;
+                            $53.usedAddresses = new Just(usedAddresses);
+                            return $53;
+                          })(maybeWallet);
+                        }))(function() {
+                          return bind16(liftAff2(getUtxos(wallet.api)(Nothing.value)))(function(utxos) {
+                            return discard6(log4("got utxos: " + show1(utxos)))(function() {
+                              return bind16(modify6(function(maybeWallet) {
+                                return map110(function(v1) {
+                                  var $56 = {};
+                                  for (var $57 in v1) {
+                                    if ({}.hasOwnProperty.call(v1, $57)) {
+                                      $56[$57] = v1[$57];
+                                    }
+                                    ;
+                                  }
+                                  ;
+                                  $56.utxos = new Just(utxos);
+                                  return $56;
+                                })(maybeWallet);
+                              }))(function() {
+                                return pure14(unit);
+                              });
+                            });
+                          });
+                        });
+                      });
+                    });
                   });
                 });
               });
@@ -8226,7 +8199,7 @@
     });
   };
   var component1 = /* @__PURE__ */ component2(monadAffAff);
-  var main2 = /* @__PURE__ */ runHalogenAff(/* @__PURE__ */ bind16(awaitBody)(function(body2) {
+  var main2 = /* @__PURE__ */ runHalogenAff(/* @__PURE__ */ bind6(awaitBody)(function(body2) {
     return runUI2(component1)(unit)(body2);
   }));
 

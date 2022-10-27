@@ -118,9 +118,9 @@ in  upstream
           , "nullable"    
           ]
       , repo =
-          "https://github.com/dduehr/purescript-cip30.git"
+          "https://github.com/anton-k/purescript-cip30.git"
       , version =
-          "c3e164d3678a372183b135e1f8f900533a26b4c5"
+          "841c8f83645a833e0ce4d5853a8288b296f7c101"
       }
 -}
   with purescript-cip30 = ../purescript-cip30/spago.dhall as Location
