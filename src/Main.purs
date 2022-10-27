@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Prelude (Unit, ($), (<>), (<$>), (>>=), bind, discard, const, pure, show, unit)
+import Prelude (Unit, ($), (<>), (<$>), bind, discard, const, pure, show, unit)
 
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
@@ -18,7 +18,7 @@ import Cardano.Wallet (Api, Cbor, NetworkId, WalletName)
 import Cardano.Wallet (getApiVersion, enable, getBalance, getChangeAddress, getName, 
   getNetworkId, getRewardAddresses, getUsedAddresses, getUtxos) as CW
 
-import Wallets (Output(..), component, tag) as Wallets
+import SelectWallet (Output(..), component, tag) as SelectWallet
 
 
 type State = Maybe Wallet
@@ -36,14 +36,14 @@ type Wallet =
   , utxos :: Maybe (Array Cbor)
   }
 
-data Action = HandleWallets Wallets.Output
+data Action = HandleSelectWallet SelectWallet.Output
 
 main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
   runUI component unit body
 
-type Slots = ( wallets :: forall query. H.Slot query Wallets.Output Unit )
+type Slots = ( wallets :: forall query. H.Slot query SelectWallet.Output Unit )
 
 component :: forall query input output m. MonadAff m => H.Component query input output m
 component =
@@ -59,7 +59,7 @@ render state =
     [ HH.h1_ [ HH.text "Boilerplate DApp Connector to Wallet" ]
     , HH.div_
       [ HH.p_ [ HH.text "Select wallet:" ]
-      , HH.slot (Proxy :: _ "wallets") unit Wallets.component unit HandleWallets 
+      , HH.slot (Proxy :: _ "wallets") unit SelectWallet.component unit HandleSelectWallet 
       ]
     , renderWallet state
     ]
@@ -107,10 +107,10 @@ renderUtxos (Just utxos) =
 
 handleAction :: forall output m. MonadAff m => Action -> H.HalogenM State Action Slots output m Unit
 handleAction = case _ of
-  HandleWallets (Wallets.WalletSelected walletName) -> do
+  HandleSelectWallet (SelectWallet.WalletSelected walletName) -> do
     H.put Nothing
     wallet <- H.liftAff $ enableWallet walletName
-    log $ "wallet enabled: " <> Wallets.tag walletName
+    log $ "wallet enabled: " <> SelectWallet.tag walletName
     H.put $ Just wallet
     rewardAddresses <- liftAff $ CW.getRewardAddresses wallet.api
     log $ "got reward addresses: " <> show rewardAddresses

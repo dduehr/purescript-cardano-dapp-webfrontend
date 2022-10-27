@@ -1,4 +1,4 @@
-module Wallets
+module SelectWallet
   ( Output(..)
   , component
   , tag

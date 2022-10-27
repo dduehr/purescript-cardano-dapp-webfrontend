@@ -7861,7 +7861,7 @@
   };
   var onChange = /* @__PURE__ */ handler2(change);
 
-  // output/Wallets/index.js
+  // output/SelectWallet/index.js
   var type_19 = /* @__PURE__ */ type_17(isPropInputType);
   var value13 = /* @__PURE__ */ value12(isPropString);
   var map20 = /* @__PURE__ */ map(functorArray);
@@ -7923,7 +7923,7 @@
       return div_(map20(renderWallet2)(v.value0));
     }
     ;
-    throw new Error("Failed pattern match at Wallets (line 53, column 1 - line 53, column 57): " + [v.constructor.name]);
+    throw new Error("Failed pattern match at SelectWallet (line 53, column 1 - line 53, column 57): " + [v.constructor.name]);
   };
   var mkWallet = function(walletName) {
     return function __do3() {
@@ -7976,7 +7976,7 @@
         });
       }
       ;
-      throw new Error("Failed pattern match at Wallets (line 76, column 16 - line 91, column 14): " + [v.constructor.name]);
+      throw new Error("Failed pattern match at SelectWallet (line 76, column 16 - line 91, column 14): " + [v.constructor.name]);
     };
   };
   var delayAction = function(dictMonadAff) {
@@ -8022,15 +8022,15 @@
   var modify6 = /* @__PURE__ */ modify2(monadStateHalogenM);
   var map110 = /* @__PURE__ */ map(functorMaybe);
   var pure14 = /* @__PURE__ */ pure(applicativeHalogenM);
-  var HandleWallets = /* @__PURE__ */ function() {
-    function HandleWallets2(value0) {
+  var HandleSelectWallet = /* @__PURE__ */ function() {
+    function HandleSelectWallet2(value0) {
       this.value0 = value0;
     }
     ;
-    HandleWallets2.create = function(value0) {
-      return new HandleWallets2(value0);
+    HandleSelectWallet2.create = function(value0) {
+      return new HandleSelectWallet2(value0);
     };
-    return HandleWallets2;
+    return HandleSelectWallet2;
   }();
   var renderUtxos = function(v) {
     if (v instanceof Nothing) {
@@ -8081,7 +8081,7 @@
   var render2 = function(dictMonadAff) {
     var component22 = component(dictMonadAff);
     return function(state3) {
-      return div_([h1_([text5("Boilerplate DApp Connector to Wallet")]), div_([p_([text5("Select wallet:")]), slot2($$Proxy.value)(unit)(component22)(unit)(HandleWallets.create)]), renderWallet(state3)]);
+      return div_([h1_([text5("Boilerplate DApp Connector to Wallet")]), div_([p_([text5("Select wallet:")]), slot2($$Proxy.value)(unit)(component22)(unit)(HandleSelectWallet.create)]), renderWallet(state3)]);
     };
   };
   var enableWallet = function(walletName) {
