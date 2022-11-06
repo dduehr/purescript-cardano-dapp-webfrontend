@@ -9,6 +9,8 @@ import Effect.Class.Console (log)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
+import Halogen.HTML.Events as HE
+import Halogen.HTML.Properties as HP
 import Halogen.VDom.Driver (runUI)
 import Type.Proxy (Proxy(..))
 
@@ -38,7 +40,17 @@ component =
 render :: forall state m. MonadAff m => state -> H.ComponentHTML Action Slots m
 render _ =
   HH.div_
-    [ HH.slot (Proxy :: _ "wallet") unit EnableWallet.component unit HandleEnableWallet ]
+    [ HH.slot (Proxy :: _ "wallet") unit EnableWallet.component unit HandleEnableWallet 
+    , HH.div_
+      [ HH.form_
+        [ HH.label [ HP.for "recipient" ] [ HH.text "Empfänger" ]
+        , HH.input [ HP.type_ HP.InputText, HP.id "recipient", HP.name "recipient" ]
+        , HH.label [ HP.for "amount" ] [ HH.text "Betrag" ]
+        , HH.input [ HP.type_ HP.InputText, HP.id "amount", HP.name "amount" ]
+        , HH.input [ HP.type_ HP.InputSubmit, HP.value "Ausführen" ]
+        ]
+      ]
+    ]
 
 handleAction :: forall output m. MonadAff m => Action -> H.HalogenM State Action Slots output m Unit
 handleAction = case _ of

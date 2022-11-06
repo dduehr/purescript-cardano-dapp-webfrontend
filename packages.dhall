@@ -124,6 +124,7 @@ in  upstream
       }
 -}
   with purescript-cip30 = ../purescript-cip30/spago.dhall as Location
+{-
   with purescript-cardano-serialization-lib =
       { dependencies = 
           [ "arraybuffer-types"
@@ -142,3 +143,5 @@ in  upstream
       , version =
           "541eb0b1bf128a426d3d0d1e8ffc683a1237de23"
       }
+-}
+  with purescript-cardano-serialization-lib = ../purescript-cardano-serialization-lib/spago.dhall as Location
