@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Prelude (Unit, ($), bind, const, discard, unit)
+import Prelude (Unit, ($), (<>), bind, const, discard, show, unit)
 
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
@@ -9,20 +9,24 @@ import Effect.Class.Console (log)
 import Halogen as H
 import Halogen.Aff as HA
 import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
-import Halogen.HTML.Properties as HP
 import Halogen.VDom.Driver (runUI)
 import Type.Proxy (Proxy(..))
 
 import Cardano.Wallet (Api)
 
 import EnableWallet (Output(..), component) as EnableWallet
+import SendAdaToAddressForm (Output, form) as SendAdaToAddressForm 
 
 type State = Maybe Api
 
-data Action = HandleEnableWallet EnableWallet.Output
+data Action 
+  = HandleEnableWallet EnableWallet.Output
+  | HandleSendAdaToAddressForm SendAdaToAddressForm.Output
 
-type Slots = ( wallet :: forall query. H.Slot query EnableWallet.Output Unit )
+type Slots = 
+  ( wallet :: forall query. H.Slot query EnableWallet.Output Unit 
+  , form   :: forall query. H.Slot query SendAdaToAddressForm.Output Unit
+  )
 
 main :: Effect Unit
 main = HA.runHalogenAff do
@@ -41,15 +45,7 @@ render :: forall state m. MonadAff m => state -> H.ComponentHTML Action Slots m
 render _ =
   HH.div_
     [ HH.slot (Proxy :: _ "wallet") unit EnableWallet.component unit HandleEnableWallet 
-    , HH.div_
-      [ HH.form_
-        [ HH.label [ HP.for "recipient" ] [ HH.text "Empfänger" ]
-        , HH.input [ HP.type_ HP.InputText, HP.id "recipient", HP.name "recipient" ]
-        , HH.label [ HP.for "amount" ] [ HH.text "Betrag" ]
-        , HH.input [ HP.type_ HP.InputText, HP.id "amount", HP.name "amount" ]
-        , HH.input [ HP.type_ HP.InputSubmit, HP.value "Ausführen" ]
-        ]
-      ]
+    , HH.slot (Proxy :: _ "form") unit SendAdaToAddressForm.form unit HandleSendAdaToAddressForm 
     ]
 
 handleAction :: forall output m. MonadAff m => Action -> H.HalogenM State Action Slots output m Unit
@@ -57,3 +53,6 @@ handleAction = case _ of
   HandleEnableWallet (EnableWallet.WalletEnabled api) -> do
     H.put $ Just api
     log "wallet api available"
+  HandleSendAdaToAddressForm output -> do
+    -- modify state to add form output (recipient, amount)
+    log $ "form result received" <> show output

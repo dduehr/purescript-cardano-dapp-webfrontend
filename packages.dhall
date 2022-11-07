@@ -145,3 +145,26 @@ in  upstream
       }
 -}
   with purescript-cardano-serialization-lib = ../purescript-cardano-serialization-lib/spago.dhall as Location
+  with halogen-formless =
+    { version = "v3.0.0"
+    , repo = "https://github.com/thomashoneyman/purescript-halogen-formless.git"
+    , dependencies =
+        [ "convertable-options"
+        , "effect"
+        , "either"
+        , "foldable-traversable"
+        , "foreign-object"
+        , "halogen"
+        , "heterogeneous"
+        , "maybe"
+        , "prelude"
+        , "record"
+        , "safe-coerce"
+        , "type-equality"
+        , "unsafe-coerce"
+        , "unsafe-reference"
+        , "variant"
+        , "web-events"
+        , "web-uievents"
+        ]
+    }
