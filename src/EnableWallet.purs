@@ -12,8 +12,17 @@ import Halogen.HTML as HH
 import Type.Proxy (Proxy(..))
 
 import Cardano.Wallet (Api, Cbor, NetworkId, WalletName)
-import Cardano.Wallet (getApiVersion, enable, getBalance, getChangeAddress, getName, 
-  getNetworkId, getRewardAddresses, getUsedAddresses, getUtxos) as CW
+import Cardano.Wallet
+  ( getApiVersion
+  , enable
+  , getBalance
+  , getChangeAddress
+  , getName
+  , getNetworkId
+  , getRewardAddresses
+  , getUsedAddresses
+  , getUtxos
+  ) as CW
 
 import SelectWallet (Output(..), component, tag) as SelectWallet
 
@@ -21,7 +30,7 @@ data Output = WalletEnabled Api
 
 type State = Maybe Wallet
 
-type Wallet = 
+type Wallet =
   { id :: WalletName
   , name :: String
   , apiVersion :: String
@@ -36,7 +45,7 @@ type Wallet =
 
 data Action = HandleSelectWallet SelectWallet.Output
 
-type Slots = ( wallets :: forall query. H.Slot query SelectWallet.Output Unit )
+type Slots = (wallets :: forall query. H.Slot query SelectWallet.Output Unit)
 
 component :: forall query input m. MonadAff m => H.Component query input Output m
 component =
@@ -51,9 +60,9 @@ render state =
   HH.div_
     [ HH.h1_ [ HH.text "Boilerplate DApp Connector to Wallet" ]
     , HH.div_
-      [ HH.p_ [ HH.text "Select wallet:" ]
-      , HH.slot (Proxy :: _ "wallets") unit SelectWallet.component unit HandleSelectWallet 
-      ]
+        [ HH.p_ [ HH.text "Select wallet:" ]
+        , HH.slot (Proxy :: _ "wallets") unit SelectWallet.component unit HandleSelectWallet
+        ]
     , renderWallet state
     ]
 
@@ -62,22 +71,22 @@ renderWallet Nothing =
   HH.div_
     [ HH.text "No wallet enabled" ]
 renderWallet (Just wallet) =
-  HH.div_ 
+  HH.div_
     [ HH.div_
-      [ HH.p_ [ HH.text $ "Wallet name: " <> wallet.name ]
-      , HH.p_ [ HH.text $ "Wallet API Version: " <>  wallet.apiVersion ]
-      , HH.p_ [ HH.text $ "Network Id (0 = testnet; 1 = mainnet): " <> show wallet.networkId ]
-      ]
+        [ HH.p_ [ HH.text $ "Wallet name: " <> wallet.name ]
+        , HH.p_ [ HH.text $ "Wallet API Version: " <> wallet.apiVersion ]
+        , HH.p_ [ HH.text $ "Network Id (0 = testnet; 1 = mainnet): " <> show wallet.networkId ]
+        ]
     , HH.div_
-      [ HH.p_ [ HH.text "UTXOs:" ]
-      , renderUtxos wallet.utxos
-      ]
+        [ HH.p_ [ HH.text "UTXOs:" ]
+        , renderUtxos wallet.utxos
+        ]
     , HH.div_
-      [ HH.p_ [ HH.text $ "Balance: " <> wallet.balance ]
-      , HH.p_ [ HH.text $ "Change Address: " <> wallet.changeAddress ]
-      , HH.p_ [ HH.text $ "Reward Addresses: ", renderRewardAddresses wallet.rewardAddresses ]
-      , HH.p_ [ HH.text $ "Used Addresses: ", renderUsedAddresses wallet.usedAddresses ]
-      ]
+        [ HH.p_ [ HH.text $ "Balance: " <> wallet.balance ]
+        , HH.p_ [ HH.text $ "Change Address: " <> wallet.changeAddress ]
+        , HH.p_ [ HH.text $ "Reward Addresses: ", renderRewardAddresses wallet.rewardAddresses ]
+        , HH.p_ [ HH.text $ "Used Addresses: ", renderUsedAddresses wallet.usedAddresses ]
+        ]
     ]
 
 renderRewardAddresses :: forall widget input. Maybe (Array Cbor) -> HH.HTML widget input
@@ -125,7 +134,7 @@ enableWallet walletName = do
   networkId <- CW.getNetworkId api
   balance <- CW.getBalance api
   changeAddress <- CW.getChangeAddress api
-  pure 
+  pure
     { id: walletName
     , name: name
     , apiVersion: apiVersion

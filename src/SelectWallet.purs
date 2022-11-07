@@ -2,13 +2,12 @@ module SelectWallet
   ( Output(..)
   , component
   , tag
-  )
-  where
+  ) where
 
 import Prelude (Unit, unit, bind, discard, pure, ($), (<>), (<$>), (/=))
 
 import Data.Array (filter, intercalate)
-import Data.Maybe(Maybe(..))
+import Data.Maybe (Maybe(..))
 import Data.Time.Duration (Milliseconds(..))
 import Data.Traversable (traverse)
 import Effect (Effect)
@@ -27,7 +26,7 @@ data Output = WalletSelected WalletName
 
 type State = Maybe (Array Wallet)
 
-type Wallet = 
+type Wallet =
   { id :: WalletName
   , name :: String
   , apiVersion :: String
@@ -42,9 +41,9 @@ component =
     { initialState
     , render
     , eval: H.mkEval H.defaultEval
-      { handleAction = handleAction
-      , initialize = Just Initialize
-      }
+        { handleAction = handleAction
+        , initialize = Just Initialize
+        }
     }
 
 initialState :: forall input. input -> State
@@ -59,23 +58,23 @@ render (Just wallets) =
   HH.div_
     (renderWallet <$> wallets)
   where
-    renderWallet wallet =
-      let
-        walletId = tag wallet.id
-      in
-        HH.span_
-          [ HH.input [ HP.type_ HP.InputRadio, HP.name "wallet", HP.id walletId, HP.value walletId, HE.onChange \_ -> SelectWallet wallet.id ] 
-          , HH.label
-            [ HP.for walletId ] 
+  renderWallet wallet =
+    let
+      walletId = tag wallet.id
+    in
+      HH.span_
+        [ HH.input [ HP.type_ HP.InputRadio, HP.name "wallet", HP.id walletId, HP.value walletId, HE.onChange \_ -> SelectWallet wallet.id ]
+        , HH.label
+            [ HP.for walletId ]
             [ HH.img [ HP.src wallet.icon, HP.width 24, HP.height 24 ]
             , HH.text $ wallet.name <> " (" <> walletId <> ")"
             ]
-          ]
+        ]
 
 handleAction :: forall m. MonadAff m => Action -> H.HalogenM State Action () Output m Unit
 handleAction = case _ of
   Initialize -> do
-    _ <- H.fork $ delayAction FindWallets $ Milliseconds 1000.0 
+    _ <- H.fork $ delayAction FindWallets $ Milliseconds 1000.0
     pure unit
 
   FindWallets -> do
@@ -92,15 +91,15 @@ handleAction = case _ of
 
 delayAction :: forall m. MonadAff m => Action -> Milliseconds -> H.HalogenM State Action () Output m Unit
 delayAction action ms = do
-    H.liftAff $ Aff.delay ms
-    handleAction action
+  H.liftAff $ Aff.delay ms
+  handleAction action
 
 mkWallet :: WalletName -> Effect Wallet
 mkWallet walletName = do
   apiVersion <- CW.getApiVersion walletName
   name <- CW.getName walletName
   icon <- CW.getIcon walletName
-  pure 
+  pure
     { id: walletName
     , name: name
     , apiVersion: apiVersion

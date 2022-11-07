@@ -2,9 +2,9 @@ module SendAdaToAddressForm (Form, Output, form) where
 
 import Prelude
 
+import Csl as Csl
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
---import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff)
 import Formless as F
 import Halogen as H
@@ -14,7 +14,7 @@ import Halogen.HTML.Properties as HP
 
 type Form :: (Type -> Type -> Type -> Type) -> Row Type
 type Form f =
-  ( name :: f String String String
+  ( recipient :: f String String Csl.Address
   , message :: f String Void String
   )
 
@@ -48,30 +48,35 @@ form = F.formless { liftAction: Eval } mempty $ H.mkComponent
     let
       validation :: { | Form F.FieldValidation }
       validation =
-        { name: case _ of
-            "" -> Left "Required"
-            val -> Right val
+        { recipient: validateRecipient
         , message: Right
         }
 
     F.handleSubmitValidate F.raise F.validate validation
 
-  render :: forall m. FormContext -> H.ComponentHTML Action () m
+  validateRecipient :: String -> Either String Csl.Address
+  validateRecipient input
+    | input == "" = Left "Required"
+    | otherwise = case Csl.address.fromBech32 input of
+        Just val -> Right val
+        _ -> Left "Invalid"
+
+  render :: FormContext -> H.ComponentHTML Action () m
   render { formActions, fields, actions } =
     HH.form
       [ HE.onSubmit formActions.handleSubmit ]
       [ HH.div_
-          [ HH.label_ [ HH.text "Name" ]
+          [ HH.label_ [ HH.text "Recipient" ]
           , HH.input
               [ HP.type_ HP.InputText
-              , HE.onValueInput actions.name.handleChange
-              , HE.onBlur actions.name.handleBlur
-              , case fields.name.result of
-                  Nothing -> HP.placeholder "Jack"
+              , HE.onValueInput actions.recipient.handleChange
+              , HE.onBlur actions.recipient.handleBlur
+              , case fields.recipient.result of
+                  Nothing -> HP.placeholder "Bech32 address"
                   Just (Left _) -> HP.attr (HH.AttrName "aria-invalid") "true"
                   Just (Right _) -> HP.attr (HH.AttrName "aria-invalid") "false"
               ]
-          , case fields.name.result of
+          , case fields.recipient.result of
               Just (Left err) -> HH.small_ [ HH.text err ]
               _ -> HH.text ""
           ]

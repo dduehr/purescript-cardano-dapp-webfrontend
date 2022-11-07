@@ -23,6 +23,7 @@ to generate this file without the comments in this block.
   , "halogen-formless"
   , "maybe"
   , "prelude"
+  , "purescript-cardano-serialization-lib"
   , "purescript-cip30"
   ]
 , packages = ./packages.dhall

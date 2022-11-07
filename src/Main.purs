@@ -15,17 +15,17 @@ import Type.Proxy (Proxy(..))
 import Cardano.Wallet (Api)
 
 import EnableWallet (Output(..), component) as EnableWallet
-import SendAdaToAddressForm (Output, form) as SendAdaToAddressForm 
+import SendAdaToAddressForm (Output, form) as SendAdaToAddressForm
 
 type State = Maybe Api
 
-data Action 
+data Action
   = HandleEnableWallet EnableWallet.Output
   | HandleSendAdaToAddressForm SendAdaToAddressForm.Output
 
-type Slots = 
-  ( wallet :: forall query. H.Slot query EnableWallet.Output Unit 
-  , form   :: forall query. H.Slot query SendAdaToAddressForm.Output Unit
+type Slots =
+  ( wallet :: forall query. H.Slot query EnableWallet.Output Unit
+  , form :: forall query. H.Slot query SendAdaToAddressForm.Output Unit
   )
 
 main :: Effect Unit
@@ -44,8 +44,8 @@ component =
 render :: forall state m. MonadAff m => state -> H.ComponentHTML Action Slots m
 render _ =
   HH.div_
-    [ HH.slot (Proxy :: _ "wallet") unit EnableWallet.component unit HandleEnableWallet 
-    , HH.slot (Proxy :: _ "form") unit SendAdaToAddressForm.form unit HandleSendAdaToAddressForm 
+    [ HH.slot (Proxy :: _ "wallet") unit EnableWallet.component unit HandleEnableWallet
+    , HH.slot (Proxy :: _ "form") unit SendAdaToAddressForm.form unit HandleSendAdaToAddressForm
     ]
 
 handleAction :: forall output m. MonadAff m => Action -> H.HalogenM State Action Slots output m Unit
