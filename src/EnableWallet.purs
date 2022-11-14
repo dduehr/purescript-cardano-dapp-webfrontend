@@ -3,7 +3,7 @@ module EnableWallet (Output(..), component) where
 import Prelude (Unit, bind, const, discard, pure, show, unit, ($), (<$>), (<>))
 
 import Csl as Csl
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), fromMaybe)
 import Data.Traversable (sequence)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff, liftAff)
@@ -84,24 +84,24 @@ renderWallet (Just wallet) =
         , renderUtxos wallet.utxos
         ]
     , HH.div_
-        [ HH.p_ [ HH.text $ "Balance: " <> show wallet.balance ]
+        [ HH.p_ [ HH.text $ "Balance: " <> (fromMaybe "?" $ Csl.bigNum.toStr <$> wallet.balance) ]
         , HH.p_ [ HH.text $ "Change Address: " <> wallet.changeAddress ]
         , HH.p_ [ HH.text $ "Reward Addresses: ", renderRewardAddresses wallet.rewardAddresses ]
         , HH.p_ [ HH.text $ "Used Addresses: ", renderUsedAddresses wallet.usedAddresses ]
         ]
     ]
 
-renderRewardAddresses :: ∀ widget input. Maybe (Array Cbor) -> HH.HTML widget input
-renderRewardAddresses Nothing =
-  HH.text "Loading ..."
-renderRewardAddresses (Just rewardAddresses) =
-  HH.text $ show rewardAddresses
-
 renderUtxos :: ∀ widget input. Maybe (Array Csl.TxUnspentOut) -> HH.HTML widget input
 renderUtxos Nothing =
   HH.text "Loading ..."
 renderUtxos (Just utxos) =
   HH.ul_ $ (\utxo -> HH.li_ [ HH.text $ show utxo ]) <$> utxos
+
+renderRewardAddresses :: ∀ widget input. Maybe (Array Cbor) -> HH.HTML widget input
+renderRewardAddresses Nothing =
+  HH.text "Loading ..."
+renderRewardAddresses (Just rewardAddresses) =
+  HH.text $ show rewardAddresses
 
 renderUsedAddresses :: ∀ widget input. Maybe (Array Cbor) -> HH.HTML widget input
 renderUsedAddresses Nothing =
