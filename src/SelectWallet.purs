@@ -35,7 +35,7 @@ type Wallet =
 
 data Action = Initialize | FindWallets | SelectWallet WalletName
 
-component :: forall query m. MonadAff m => H.Component query Unit Output m
+component :: ∀ query m. MonadAff m => H.Component query Unit Output m
 component =
   H.mkComponent
     { initialState
@@ -46,10 +46,10 @@ component =
         }
     }
 
-initialState :: forall input. input -> State
+initialState :: ∀ input. input -> State
 initialState _ = Nothing
 
-render :: forall m. State -> H.ComponentHTML Action () m
+render :: ∀ m. State -> H.ComponentHTML Action () m
 render Nothing =
   HH.div_
     [ HH.text "No wallets available" ]
@@ -71,7 +71,7 @@ render (Just wallets) =
             ]
         ]
 
-handleAction :: forall m. MonadAff m => Action -> H.HalogenM State Action () Output m Unit
+handleAction :: ∀ m. MonadAff m => Action -> H.HalogenM State Action () Output m Unit
 handleAction = case _ of
   Initialize -> do
     _ <- H.fork $ delayAction FindWallets $ Milliseconds 1000.0
@@ -89,7 +89,7 @@ handleAction = case _ of
     H.raise $ WalletSelected walletName
     pure unit
 
-delayAction :: forall m. MonadAff m => Action -> Milliseconds -> H.HalogenM State Action () Output m Unit
+delayAction :: ∀ m. MonadAff m => Action -> Milliseconds -> H.HalogenM State Action () Output m Unit
 delayAction action ms = do
   H.liftAff $ Aff.delay ms
   handleAction action

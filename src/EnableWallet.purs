@@ -47,9 +47,9 @@ type Wallet =
 
 data Action = HandleSelectWallet SelectWallet.Output
 
-type Slots = (wallets :: forall query. H.Slot query SelectWallet.Output Unit)
+type Slots = (wallets :: ∀ query. H.Slot query SelectWallet.Output Unit)
 
-component :: forall query input m. MonadAff m => H.Component query input Output m
+component :: ∀ query input m. MonadAff m => H.Component query input Output m
 component =
   H.mkComponent
     { initialState: const Nothing
@@ -57,7 +57,7 @@ component =
     , eval: H.mkEval H.defaultEval { handleAction = handleAction }
     }
 
-render :: forall m. MonadAff m => State -> H.ComponentHTML Action Slots m
+render :: ∀ m. MonadAff m => State -> H.ComponentHTML Action Slots m
 render state =
   HH.div_
     [ HH.h1_ [ HH.text "Boilerplate DApp Connector to Wallet" ]
@@ -68,7 +68,7 @@ render state =
     , renderWallet state
     ]
 
-renderWallet :: forall widget input. Maybe Wallet -> HH.HTML widget input
+renderWallet :: ∀ widget input. Maybe Wallet -> HH.HTML widget input
 renderWallet Nothing =
   HH.div_
     [ HH.text "No wallet enabled" ]
@@ -91,25 +91,25 @@ renderWallet (Just wallet) =
         ]
     ]
 
-renderRewardAddresses :: forall widget input. Maybe (Array Cbor) -> HH.HTML widget input
+renderRewardAddresses :: ∀ widget input. Maybe (Array Cbor) -> HH.HTML widget input
 renderRewardAddresses Nothing =
   HH.text "Loading ..."
 renderRewardAddresses (Just rewardAddresses) =
   HH.text $ show rewardAddresses
 
-renderUsedAddresses :: forall widget input. Maybe (Array Cbor) -> HH.HTML widget input
-renderUsedAddresses Nothing =
-  HH.text "Loading ..."
-renderUsedAddresses (Just usedAddresses) =
-  HH.text $ show usedAddresses
-
-renderUtxos :: forall widget input. Maybe (Array Csl.TxUnspentOut) -> HH.HTML widget input
+renderUtxos :: ∀ widget input. Maybe (Array Csl.TxUnspentOut) -> HH.HTML widget input
 renderUtxos Nothing =
   HH.text "Loading ..."
 renderUtxos (Just utxos) =
   HH.ul_ $ (\utxo -> HH.li_ [ HH.text $ show utxo ]) <$> utxos
 
-handleAction :: forall m. MonadAff m => Action -> H.HalogenM State Action Slots Output m Unit
+renderUsedAddresses :: ∀ widget input. Maybe (Array Cbor) -> HH.HTML widget input
+renderUsedAddresses Nothing =
+  HH.text "Loading ..."
+renderUsedAddresses (Just usedAddresses) =
+  HH.text $ show usedAddresses
+
+handleAction :: ∀ m. MonadAff m => Action -> H.HalogenM State Action Slots Output m Unit
 handleAction = case _ of
   HandleSelectWallet (SelectWallet.WalletSelected walletName) -> do
     H.put Nothing

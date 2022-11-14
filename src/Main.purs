@@ -23,8 +23,8 @@ data Action
   | HandleSendAdaToAddressForm SendAdaToAddressForm.Output
 
 type Slots =
-  ( wallet :: forall query. H.Slot query EnableWallet.Output Unit
-  , form :: forall query. H.Slot query SendAdaToAddressForm.Output Unit
+  ( wallet :: ∀ query. H.Slot query EnableWallet.Output Unit
+  , form :: ∀ query. H.Slot query SendAdaToAddressForm.Output Unit
   )
 
 main :: Effect Unit
@@ -32,7 +32,7 @@ main = HA.runHalogenAff do
   body <- HA.awaitBody
   runUI component unit body
 
-component :: forall query input output m. MonadAff m => H.Component query input output m
+component :: ∀ query input output m. MonadAff m => H.Component query input output m
 component =
   H.mkComponent
     { initialState: const Nothing
@@ -40,14 +40,14 @@ component =
     , eval: H.mkEval H.defaultEval { handleAction = handleAction }
     }
 
-render :: forall state m. MonadAff m => state -> H.ComponentHTML Action Slots m
+render :: ∀ state m. MonadAff m => state -> H.ComponentHTML Action Slots m
 render _ =
   HH.div_
     [ HH.slot (Proxy :: _ "wallet") unit EnableWallet.component unit HandleEnableWallet
     , HH.slot (Proxy :: _ "form") unit SendAdaToAddressForm.form unit HandleSendAdaToAddressForm
     ]
 
-handleAction :: forall output m. MonadAff m => Action -> H.HalogenM State Action Slots output m Unit
+handleAction :: ∀ output m. MonadAff m => Action -> H.HalogenM State Action Slots output m Unit
 handleAction = case _ of
   HandleEnableWallet (EnableWallet.WalletEnabled api) -> do
     H.put $ Just api

@@ -27,7 +27,7 @@ data Action
 
 type Output = { | Form F.FieldOutput }
 
-form :: forall query m. MonadAff m => H.Component query Unit Output m
+form :: ∀ query m. MonadAff m => H.Component query Unit Output m
 form = F.formless { liftAction: Eval } mempty $ H.mkComponent
   { initialState: identity
   , render
@@ -43,7 +43,7 @@ form = F.formless { liftAction: Eval } mempty $ H.mkComponent
     Receive context -> H.put context
     Eval action -> F.eval action
 
-  handleQuery :: forall a. F.FormQuery _ _ _ _ a -> H.HalogenM _ _ _ _ _ (Maybe a)
+  handleQuery :: ∀ a. F.FormQuery _ _ _ _ a -> H.HalogenM _ _ _ _ _ (Maybe a)
   handleQuery = do
     let
       validation :: { | Form F.FieldValidation }
