@@ -1,7 +1,8 @@
 module Main (main) where
 
-import Prelude (Unit, ($), (<>), bind, const, discard, show, unit)
+import Prelude (Unit, bind, const, discard, show, unit, ($), (<>))
 
+import Cardano.Wallet (Api)
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff.Class (class MonadAff)
@@ -11,8 +12,6 @@ import Halogen.Aff as HA
 import Halogen.HTML as HH
 import Halogen.VDom.Driver (runUI)
 import Type.Proxy (Proxy(..))
-
-import Cardano.Wallet (Api)
 
 import EnableWallet (Output(..), component) as EnableWallet
 import SendAdaToAddressForm (Output, form) as SendAdaToAddressForm
@@ -56,3 +55,5 @@ handleAction = case _ of
   HandleSendAdaToAddressForm output -> do
     -- modify state to add form output (recipient, amount)
     log $ "form result received" <> show output
+
+

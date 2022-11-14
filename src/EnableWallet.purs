@@ -1,8 +1,10 @@
 module EnableWallet (Output(..), component) where
 
-import Prelude (Unit, ($), (<>), (<$>), bind, discard, const, pure, show, unit)
+import Prelude (Unit, bind, const, discard, pure, show, unit, ($), (<$>), (<>))
 
+import Csl as Csl
 import Data.Maybe (Maybe(..))
+import Data.Traversable (sequence)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (liftEffect)
@@ -36,11 +38,11 @@ type Wallet =
   , apiVersion :: String
   , api :: Api
   , networkId :: NetworkId
-  , balance :: Cbor
+  , balance :: Maybe Csl.BigNum
   , changeAddress :: Cbor
   , rewardAddresses :: Maybe (Array Cbor)
   , usedAddresses :: Maybe (Array Cbor)
-  , utxos :: Maybe (Array Cbor)
+  , utxos :: Maybe (Array Csl.TxUnspentOut)
   }
 
 data Action = HandleSelectWallet SelectWallet.Output
@@ -82,7 +84,7 @@ renderWallet (Just wallet) =
         , renderUtxos wallet.utxos
         ]
     , HH.div_
-        [ HH.p_ [ HH.text $ "Balance: " <> wallet.balance ]
+        [ HH.p_ [ HH.text $ "Balance: " <> show wallet.balance ]
         , HH.p_ [ HH.text $ "Change Address: " <> wallet.changeAddress ]
         , HH.p_ [ HH.text $ "Reward Addresses: ", renderRewardAddresses wallet.rewardAddresses ]
         , HH.p_ [ HH.text $ "Used Addresses: ", renderUsedAddresses wallet.usedAddresses ]
@@ -101,7 +103,7 @@ renderUsedAddresses Nothing =
 renderUsedAddresses (Just usedAddresses) =
   HH.text $ show usedAddresses
 
-renderUtxos :: forall widget input. Maybe (Array Cbor) -> HH.HTML widget input
+renderUtxos :: forall widget input. Maybe (Array Csl.TxUnspentOut) -> HH.HTML widget input
 renderUtxos Nothing =
   HH.text "Loading ..."
 renderUtxos (Just utxos) =
@@ -121,9 +123,13 @@ handleAction = case _ of
     usedAddresses <- liftAff $ CW.getUsedAddresses wallet.api { limit: 10, page: 0 }
     log $ "got used addresses: " <> show usedAddresses
     _ <- H.modify \maybeWallet -> _ { usedAddresses = Just usedAddresses } <$> maybeWallet
-    utxos <- liftAff $ CW.getUtxos wallet.api Nothing
-    log $ "got utxos: " <> show utxos
-    _ <- H.modify \maybeWallet -> _ { utxos = Just utxos } <$> maybeWallet
+    -- CW.getUtxos :: Api -> Maybe Paginate -> Aff (Array Cbor)
+    utxos' <- liftAff $ CW.getUtxos wallet.api Nothing
+    log $ "got utxos (cbor): " <> show utxos'
+    -- Csl.fromHex :: ∀ a. TxUnspentOut a => String -> Maybe a
+    let utxos = sequence $ Csl.fromHex <$> utxos' 
+    log $ "fromHex utxos: " <> show utxos
+    _ <- H.modify \maybeWallet -> _ { utxos = utxos } <$> maybeWallet
     pure unit
 
 enableWallet :: WalletName -> Aff Wallet
@@ -132,7 +138,7 @@ enableWallet walletName = do
   apiVersion <- liftEffect $ CW.getApiVersion walletName
   api <- CW.enable walletName
   networkId <- CW.getNetworkId api
-  balance <- CW.getBalance api
+  balance <- Csl.fromHex <$> CW.getBalance api
   changeAddress <- CW.getChangeAddress api
   pure
     { id: walletName

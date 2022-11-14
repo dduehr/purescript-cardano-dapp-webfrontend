@@ -15,7 +15,7 @@ import Halogen.HTML.Properties as HP
 type Form :: (Type -> Type -> Type -> Type) -> Row Type
 type Form f =
   ( recipient :: f String String Csl.Address
-  , message :: f String Void String
+  , amount    :: f String String Csl.BigNum
   )
 
 type FormContext = F.FormContext (Form F.FieldState) (Form (F.FieldAction Action)) Unit Action
@@ -48,18 +48,23 @@ form = F.formless { liftAction: Eval } mempty $ H.mkComponent
     let
       validation :: { | Form F.FieldValidation }
       validation =
-        { recipient: validateRecipient
-        , message: Right
+        { recipient: validBech32
+        , amount: validBigNum
         }
 
     F.handleSubmitValidate F.raise F.validate validation
 
-  validateRecipient :: String -> Either String Csl.Address
-  validateRecipient input
-    | input == "" = Left "Required"
-    | otherwise = case Csl.address.fromBech32 input of
+  validBech32 :: String -> Either String Csl.Address
+  validBech32 input =
+    case Csl.address.fromBech32 input of
         Just val -> Right val
-        _ -> Left "Invalid"
+        _ -> Left "Invalid address"
+
+  validBigNum :: String -> Either String Csl.BigNum
+  validBigNum input =
+    case Csl.bigNum.fromStr input of
+        Just val -> Right val
+        _ -> Left "Invalid number"
 
   render :: FormContext -> H.ComponentHTML Action () m
   render { formActions, fields, actions } =
@@ -80,12 +85,21 @@ form = F.formless { liftAction: Eval } mempty $ H.mkComponent
               Just (Left err) -> HH.small_ [ HH.text err ]
               _ -> HH.text ""
           ]
+      -- FIXME: code duplication
       , HH.div_
-          [ HH.label_ [ HH.text "Message" ]
-          , HH.textarea
-              [ HE.onValueInput actions.message.handleChange
-              , HE.onBlur actions.message.handleBlur
+          [ HH.label_ [ HH.text "Amount" ]
+          , HH.input
+              [ HP.type_ HP.InputText
+              , HE.onValueInput actions.amount.handleChange
+              , HE.onBlur actions.amount.handleBlur
+              , case fields.amount.result of
+                  Nothing -> HP.placeholder "Number"
+                  Just (Left _) -> HP.attr (HH.AttrName "aria-invalid") "true"
+                  Just (Right _) -> HP.attr (HH.AttrName "aria-invalid") "false"
               ]
+          , case fields.amount.result of
+              Just (Left err) -> HH.small_ [ HH.text err ]
+              _ -> HH.text ""
           ]
       , HH.button
           [ HP.type_ HP.ButtonSubmit ]
