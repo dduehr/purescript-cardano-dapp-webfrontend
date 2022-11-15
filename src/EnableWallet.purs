@@ -1,6 +1,6 @@
 module EnableWallet (Output(..), component) where
 
-import Prelude (Unit, bind, const, discard, pure, show, unit, ($), (<$>), (<>))
+import Prelude (Unit, bind, const, discard, map, pure, show, unit, ($), (<$>), (<>))
 
 import Csl as Csl
 import Data.Maybe (Maybe(..), fromMaybe)
@@ -42,7 +42,7 @@ type Wallet =
   , changeAddress :: Cbor
   , rewardAddresses :: Maybe (Array Cbor)
   , usedAddresses :: Maybe (Array Cbor)
-  , utxos :: Maybe (Array Csl.TxUnspentOut)
+  , utxos :: Maybe (Array Csl.TxOut)
   }
 
 data Action = HandleSelectWallet SelectWallet.Output
@@ -91,11 +91,15 @@ renderWallet (Just wallet) =
         ]
     ]
 
-renderUtxos :: ∀ widget input. Maybe (Array Csl.TxUnspentOut) -> HH.HTML widget input
+renderUtxos :: ∀ widget input. Maybe (Array Csl.TxOut) -> HH.HTML widget input
 renderUtxos Nothing =
   HH.text "Loading ..."
 renderUtxos (Just utxos) =
-  HH.ul_ $ (\utxo -> HH.li_ [ HH.text $ show utxo ]) <$> utxos
+  HH.ul_ $ (\utxo -> HH.li_ 
+    [ HH.text $ Csl.address.toHex $ Csl.txOut.address utxo
+    , HH.text ", "
+    , HH.text $ Csl.bigNum.toStr $ Csl.value.coin $ Csl.txOut.amount utxo 
+    ]) <$> utxos
 
 renderRewardAddresses :: ∀ widget input. Maybe (Array Cbor) -> HH.HTML widget input
 renderRewardAddresses Nothing =
@@ -127,7 +131,9 @@ handleAction = case _ of
     utxos' <- liftAff $ CW.getUtxos wallet.api Nothing
     log $ "got utxos (cbor): " <> show utxos'
     -- Csl.fromHex :: ∀ a. TxUnspentOut a => String -> Maybe a
-    let utxos = sequence $ Csl.fromHex <$> utxos' 
+    -- Csl.txUnspentOut.out :: TxUnspentOut -> TxOut
+    let utxos = sequence $ map Csl.txUnspentOut.out <$> Csl.fromHex <$> utxos' 
+
     log $ "fromHex utxos: " <> show utxos
     _ <- H.modify \maybeWallet -> _ { utxos = utxos } <$> maybeWallet
     pure unit
