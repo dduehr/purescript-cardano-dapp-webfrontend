@@ -3,7 +3,7 @@ module EnableWallet (Output(..), component) where
 import Prelude (Unit, bind, const, discard, map, pure, show, unit, ($), (<$>), (<>))
 
 import Csl as Csl
-import Data.Maybe (Maybe(..), fromMaybe)
+import Data.Maybe (Maybe(..))
 import Data.Traversable (sequence)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff, liftAff)
@@ -84,7 +84,7 @@ renderWallet (Just wallet) =
         , renderUtxos wallet.utxos
         ]
     , HH.div_
-        [ HH.p_ [ HH.text $ "Balance: " <> (fromMaybe "?" $ Csl.bigNum.toStr <$> wallet.balance) ]
+        [ HH.p_ [ HH.text $ "Balance: ", renderBalance wallet.balance ]
         , HH.p_ [ HH.text $ "Change Address: " <> wallet.changeAddress ]
         , HH.p_ [ HH.text $ "Reward Addresses: ", renderRewardAddresses wallet.rewardAddresses ]
         , HH.p_ [ HH.text $ "Used Addresses: ", renderUsedAddresses wallet.usedAddresses ]
@@ -100,6 +100,12 @@ renderUtxos (Just utxos) =
     , HH.text ", "
     , HH.text $ Csl.bigNum.toStr $ Csl.value.coin $ Csl.txOut.amount utxo 
     ]) <$> utxos
+
+renderBalance :: ∀ widget input. Maybe Csl.BigNum -> HH.HTML widget input
+renderBalance Nothing =
+  HH.text "?"
+renderBalance (Just balance) =
+  HH.text $ Csl.bigNum.toStr $ balance
 
 renderRewardAddresses :: ∀ widget input. Maybe (Array Cbor) -> HH.HTML widget input
 renderRewardAddresses Nothing =
