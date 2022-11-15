@@ -1,10 +1,11 @@
 module EnableWallet (Output(..), component) where
 
-import Prelude (Unit, bind, const, discard, map, pure, show, unit, ($), (<$>), (<>))
+import Prelude (Unit, bind, const, discard, flip, map, pure, show, unit, ($), (<$>), (<>))
 
 import Csl as Csl
 import Data.Maybe (Maybe(..))
-import Data.Traversable (sequence)
+import Data.Foldable (intercalate)
+import Data.Traversable (sequence, traverse)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (liftEffect)
@@ -40,7 +41,7 @@ type Wallet =
   , networkId :: NetworkId
   , balance :: Maybe Csl.BigNum
   , changeAddress :: Maybe Csl.Address
-  , rewardAddresses :: Maybe (Array Cbor)
+  , rewardAddresses :: Maybe (Array Csl.Address)
   , usedAddresses :: Maybe (Array Cbor)
   , utxos :: Maybe (Array Csl.TxOut)
   }
@@ -96,7 +97,7 @@ renderUtxos Nothing =
   HH.text "Loading ..."
 renderUtxos (Just utxos) =
   HH.ul_ $ (\utxo -> HH.li_ 
-    [ HH.text $ Csl.address.toHex $ Csl.txOut.address utxo
+    [ HH.text $ flip Csl.address.toBech32 Nothing $ Csl.txOut.address utxo
     , HH.text ", "
     , HH.text $ Csl.bigNum.toStr $ Csl.value.coin $ Csl.txOut.amount utxo 
     ]) <$> utxos
@@ -113,11 +114,11 @@ renderChangeAddress Nothing =
 renderChangeAddress (Just address) =
   HH.text $ Csl.address.toBech32 address Nothing
 
-renderRewardAddresses :: ∀ widget input. Maybe (Array Cbor) -> HH.HTML widget input
+renderRewardAddresses :: ∀ widget input. Maybe (Array Csl.Address) -> HH.HTML widget input
 renderRewardAddresses Nothing =
   HH.text "Loading ..."
 renderRewardAddresses (Just rewardAddresses) =
-  HH.text $ show rewardAddresses
+  HH.text $ intercalate ", " $ (flip Csl.address.toBech32 Nothing) <$> rewardAddresses
 
 renderUsedAddresses :: ∀ widget input. Maybe (Array Cbor) -> HH.HTML widget input
 renderUsedAddresses Nothing =
@@ -133,9 +134,11 @@ handleAction = case _ of
     log $ "wallet enabled: " <> SelectWallet.tag walletName
     H.put $ Just wallet
     H.raise $ WalletEnabled wallet.api
-    rewardAddresses <- liftAff $ CW.getRewardAddresses wallet.api
-    log $ "got reward addresses: " <> show rewardAddresses
-    _ <- H.modify \maybeWallet -> _ { rewardAddresses = Just rewardAddresses } <$> maybeWallet
+    -- CW.getRewardAddresses :: Api -> Aff (Array Cbor)
+    rewardAddresses' <- liftAff $ CW.getRewardAddresses wallet.api
+    log $ "got reward addresses: " <> show rewardAddresses'
+    let rewardAddresses = traverse Csl.address.fromHex rewardAddresses'
+    _ <- H.modify \maybeWallet -> _ { rewardAddresses = rewardAddresses } <$> maybeWallet
     usedAddresses <- liftAff $ CW.getUsedAddresses wallet.api { limit: 10, page: 0 }
     log $ "got used addresses: " <> show usedAddresses
     _ <- H.modify \maybeWallet -> _ { usedAddresses = Just usedAddresses } <$> maybeWallet
