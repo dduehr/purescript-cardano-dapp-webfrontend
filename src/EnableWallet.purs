@@ -39,7 +39,7 @@ type Wallet =
   , api :: Api
   , networkId :: NetworkId
   , balance :: Maybe Csl.BigNum
-  , changeAddress :: Cbor
+  , changeAddress :: Maybe Csl.Address
   , rewardAddresses :: Maybe (Array Cbor)
   , usedAddresses :: Maybe (Array Cbor)
   , utxos :: Maybe (Array Csl.TxOut)
@@ -85,7 +85,7 @@ renderWallet (Just wallet) =
         ]
     , HH.div_
         [ HH.p_ [ HH.text $ "Balance: ", renderBalance wallet.balance ]
-        , HH.p_ [ HH.text $ "Change Address: " <> wallet.changeAddress ]
+        , HH.p_ [ HH.text $ "Change Address: ", renderChangeAddress wallet.changeAddress ]
         , HH.p_ [ HH.text $ "Reward Addresses: ", renderRewardAddresses wallet.rewardAddresses ]
         , HH.p_ [ HH.text $ "Used Addresses: ", renderUsedAddresses wallet.usedAddresses ]
         ]
@@ -106,6 +106,12 @@ renderBalance Nothing =
   HH.text "?"
 renderBalance (Just balance) =
   HH.text $ Csl.bigNum.toStr $ balance
+
+renderChangeAddress :: ∀ widget input. Maybe Csl.Address -> HH.HTML widget input
+renderChangeAddress Nothing =
+  HH.text "?"
+renderChangeAddress (Just address) =
+  HH.text $ Csl.address.toBech32 address Nothing
 
 renderRewardAddresses :: ∀ widget input. Maybe (Array Cbor) -> HH.HTML widget input
 renderRewardAddresses Nothing =
@@ -151,7 +157,7 @@ enableWallet walletName = do
   api <- CW.enable walletName
   networkId <- CW.getNetworkId api
   balance <- Csl.fromHex <$> CW.getBalance api
-  changeAddress <- CW.getChangeAddress api
+  changeAddress <- Csl.fromHex <$> CW.getChangeAddress api
   pure
     { id: walletName
     , name: name

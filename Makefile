@@ -20,8 +20,8 @@ bundle:
 watch:
 	spago build --then ${esbuild-cmd} --watch
 
-serve: run
-	(npm run build && npm run serve)
+serve:
+	(make -B bundle && npm run build && npm run serve)
 	
 format:
 	purs-tidy format-in-place "src/**/*.purs"
