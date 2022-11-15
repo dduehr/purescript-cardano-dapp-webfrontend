@@ -14,7 +14,7 @@ import Halogen as H
 import Halogen.HTML as HH
 import Type.Proxy (Proxy(..))
 
-import Cardano.Wallet (Api, Cbor, NetworkId, WalletName)
+import Cardano.Wallet (Api, NetworkId, WalletName)
 import Cardano.Wallet
   ( getApiVersion
   , enable
@@ -42,7 +42,7 @@ type Wallet =
   , balance :: Maybe Csl.BigNum
   , changeAddress :: Maybe Csl.Address
   , rewardAddresses :: Maybe (Array Csl.Address)
-  , usedAddresses :: Maybe (Array Cbor)
+  , usedAddresses :: Maybe (Array Csl.Address)
   , utxos :: Maybe (Array Csl.TxOut)
   }
 
@@ -120,11 +120,11 @@ renderRewardAddresses Nothing =
 renderRewardAddresses (Just rewardAddresses) =
   HH.text $ intercalate ", " $ (flip Csl.address.toBech32 Nothing) <$> rewardAddresses
 
-renderUsedAddresses :: ∀ widget input. Maybe (Array Cbor) -> HH.HTML widget input
+renderUsedAddresses :: ∀ widget input. Maybe (Array Csl.Address) -> HH.HTML widget input
 renderUsedAddresses Nothing =
   HH.text "Loading ..."
 renderUsedAddresses (Just usedAddresses) =
-  HH.text $ show usedAddresses
+  HH.text $ intercalate ", " $ (flip Csl.address.toBech32 Nothing) <$> usedAddresses
 
 handleAction :: ∀ m. MonadAff m => Action -> H.HalogenM State Action Slots Output m Unit
 handleAction = case _ of
@@ -139,9 +139,10 @@ handleAction = case _ of
     log $ "got reward addresses: " <> show rewardAddresses'
     let rewardAddresses = traverse Csl.address.fromHex rewardAddresses'
     _ <- H.modify \maybeWallet -> _ { rewardAddresses = rewardAddresses } <$> maybeWallet
-    usedAddresses <- liftAff $ CW.getUsedAddresses wallet.api { limit: 10, page: 0 }
-    log $ "got used addresses: " <> show usedAddresses
-    _ <- H.modify \maybeWallet -> _ { usedAddresses = Just usedAddresses } <$> maybeWallet
+    usedAddresses' <- liftAff $ CW.getUsedAddresses wallet.api { limit: 10, page: 0 }
+    log $ "got used addresses: " <> show usedAddresses'
+    let usedAddresses = traverse Csl.address.fromHex usedAddresses'
+    _ <- H.modify \maybeWallet -> _ { usedAddresses = usedAddresses } <$> maybeWallet
     -- CW.getUtxos :: Api -> Maybe Paginate -> Aff (Array Cbor)
     utxos' <- liftAff $ CW.getUtxos wallet.api Nothing
     log $ "got utxos (cbor): " <> show utxos'
