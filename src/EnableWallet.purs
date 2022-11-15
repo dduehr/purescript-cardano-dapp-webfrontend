@@ -4,7 +4,6 @@ import Prelude (Unit, bind, const, discard, flip, map, pure, show, unit, ($), (<
 
 import Csl as Csl
 import Data.Maybe (Maybe(..))
-import Data.Foldable (intercalate)
 import Data.Traversable (sequence, traverse)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff, liftAff)
@@ -118,13 +117,13 @@ renderRewardAddresses :: ∀ widget input. Maybe (Array Csl.Address) -> HH.HTML 
 renderRewardAddresses Nothing =
   HH.text "Loading ..."
 renderRewardAddresses (Just rewardAddresses) =
-  HH.text $ intercalate ", " $ (flip Csl.address.toBech32 Nothing) <$> rewardAddresses
+  HH.ul_ $ (\rewardAddress -> HH.li_ [ HH.text $ Csl.address.toBech32 rewardAddress Nothing ] ) <$> rewardAddresses
 
 renderUsedAddresses :: ∀ widget input. Maybe (Array Csl.Address) -> HH.HTML widget input
 renderUsedAddresses Nothing =
   HH.text "Loading ..."
 renderUsedAddresses (Just usedAddresses) =
-  HH.text $ intercalate ", " $ (flip Csl.address.toBech32 Nothing) <$> usedAddresses
+  HH.ul_ $ (\usedAddress -> HH.li_ [ HH.text $ Csl.address.toBech32 usedAddress Nothing ] ) <$> usedAddresses
 
 handleAction :: ∀ m. MonadAff m => Action -> H.HalogenM State Action Slots Output m Unit
 handleAction = case _ of
