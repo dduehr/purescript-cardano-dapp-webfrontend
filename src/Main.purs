@@ -55,5 +55,6 @@ handleAction = case _ of
   HandleSendAdaToAddressForm output -> do
     -- modify state to add form output (recipient, amount)
     log $ "form result received" <> show output
+    log "TODO: send ADA to address"
 
 
