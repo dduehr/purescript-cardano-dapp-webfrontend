@@ -1,8 +1,9 @@
 module Main (main) where
 
-import Prelude (Unit, bind, const, discard, show, unit, ($), (<>))
+import Prelude (Unit, bind, const, discard, pure, show, unit, ($), (<>))
 
 import Cardano.Wallet (Api)
+import Csl as Csl
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Aff.Class (class MonadAff)
@@ -53,8 +54,13 @@ handleAction = case _ of
     H.put $ Just api
     log "wallet api available"
   HandleSendAdaToAddressForm output -> do
-    -- modify state to add form output (recipient, amount)
-    log $ "form result received" <> show output
-    log "TODO: send ADA to address"
+    state <- H.get
+    case state of
+      (Just api) -> H.liftAff $ sendAdaToAddress api output.recipient output.amount
+      _ -> log "No wallet connected"
 
+sendAdaToAddress :: ∀ m. MonadAff m => Api -> Csl.Address -> Csl.BigNum -> m Unit
+sendAdaToAddress api recipient amount = do
+  log $ "TODO: send " <> show amount <> " Lovelace to " <> show recipient
+  pure unit
 
