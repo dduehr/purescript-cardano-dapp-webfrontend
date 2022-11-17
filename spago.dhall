@@ -21,6 +21,7 @@ to generate this file without the comments in this block.
   , "foldable-traversable"
   , "halogen"
   , "halogen-formless"
+  , "integers"
   , "maybe"
   , "prelude"
   , "purescript-cardano-serialization-lib"

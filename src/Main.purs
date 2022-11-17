@@ -1,6 +1,6 @@
 module Main (main) where
 
-import Prelude (Unit, bind, const, discard, pure, show, unit, ($), (<>))
+import Prelude (Unit, bind, const, discard, flip, pure, show, unit, ($), (<>))
 
 import Cardano.Wallet (Api)
 import Csl as Csl
@@ -62,5 +62,22 @@ handleAction = case _ of
 sendAdaToAddress :: ∀ m. MonadAff m => Api -> Csl.Address -> Csl.BigNum -> m Unit
 sendAdaToAddress api recipient amount = do
   log $ "TODO: send " <> show amount <> " Lovelace to " <> show recipient
+  -- changeAddress <- Csl.address.fromHex $ Wallet.getChangeAddress api ... to be continued!
   pure unit
 
+txBuilderConfig :: Maybe Csl.TxBuilderConfig
+txBuilderConfig = do
+  feeCoefficient <- Csl.bigNum.fromStr "44"
+  feeConstant <- Csl.bigNum.fromStr "155381"
+  poolDeposit <- Csl.bigNum.fromStr "500000000"
+  keyDeposit <- Csl.bigNum.fromStr "2000000"
+  coinsPerUtxoWord <- Csl.bigNum.fromStr "34482"
+  pure $ Csl.txBuilderConfigBuilder.build
+    $ flip Csl.txBuilderConfigBuilder.preferPureChange true
+    $ flip Csl.txBuilderConfigBuilder.maxTxSize 16384
+    $ flip Csl.txBuilderConfigBuilder.maxValueSize 5000
+    $ flip Csl.txBuilderConfigBuilder.coinsPerUtxoWord coinsPerUtxoWord
+    $ flip Csl.txBuilderConfigBuilder.keyDeposit keyDeposit
+    $ flip Csl.txBuilderConfigBuilder.poolDeposit poolDeposit
+    $ flip Csl.txBuilderConfigBuilder.feeAlgo (Csl.linearFee.new feeCoefficient feeConstant)
+    $ Csl.txBuilderConfigBuilder.new 

@@ -4,6 +4,7 @@ import Prelude (Unit, bind, const, discard, flip, map, pure, show, unit, ($), (<
 
 import Csl as Csl
 import Data.Maybe (Maybe(..))
+import Data.Int (floor)
 import Data.Traversable (sequence, traverse)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff, liftAff)
@@ -42,7 +43,7 @@ type Wallet =
   , changeAddress :: Maybe Csl.Address
   , rewardAddresses :: Maybe (Array Csl.Address)
   , usedAddresses :: Maybe (Array Csl.Address)
-  , utxos :: Maybe (Array Csl.TxOut)
+  , utxos :: Maybe (Array Csl.TxUnspentOut)
   }
 
 data Action = HandleSelectWallet SelectWallet.Output
@@ -91,14 +92,16 @@ renderWallet (Just wallet) =
         ]
     ]
 
-renderUtxos :: ∀ widget input. Maybe (Array Csl.TxOut) -> HH.HTML widget input
+renderUtxos :: ∀ widget input. Maybe (Array Csl.TxUnspentOut) -> HH.HTML widget input
 renderUtxos Nothing =
   HH.text "Loading ..."
 renderUtxos (Just utxos) =
   HH.ul_ $ (\utxo -> HH.li_ 
-    [ HH.text $ flip Csl.address.toBech32 Nothing $ Csl.txOut.address utxo
-    , HH.text ", "
-    , HH.text $ Csl.bigNum.toStr $ Csl.value.coin $ Csl.txOut.amount utxo 
+    [ HH.text $ Csl.txHash.toHex $ Csl.txIn.txId $ Csl.txUnspentOut.in utxo
+    , HH.text " #"
+    , HH.text $ show $ floor $ Csl.txIn.index $ Csl.txUnspentOut.in utxo
+    , HH.text " = "
+    , HH.text $ Csl.bigNum.toStr $ Csl.value.coin $ Csl.txOut.amount  $ Csl.txUnspentOut.out utxo
     ]) <$> utxos
 
 renderBalance :: ∀ widget input. Maybe Csl.BigNum -> HH.HTML widget input
@@ -129,27 +132,19 @@ handleAction :: ∀ m. MonadAff m => Action -> H.HalogenM State Action Slots Out
 handleAction = case _ of
   HandleSelectWallet (SelectWallet.WalletSelected walletName) -> do
     H.put Nothing
+    -- get wallet api
     wallet <- H.liftAff $ enableWallet walletName
     log $ "wallet enabled: " <> SelectWallet.tag walletName
     H.put $ Just wallet
     H.raise $ WalletEnabled wallet.api
-    -- CW.getRewardAddresses :: Api -> Aff (Array Cbor)
-    rewardAddresses' <- liftAff $ CW.getRewardAddresses wallet.api
-    log $ "got reward addresses: " <> show rewardAddresses'
-    let rewardAddresses = traverse Csl.address.fromHex rewardAddresses'
+    -- get reward addresses
+    rewardAddresses <- liftAff $ traverse Csl.address.fromHex <$> CW.getRewardAddresses wallet.api
     _ <- H.modify \maybeWallet -> _ { rewardAddresses = rewardAddresses } <$> maybeWallet
-    usedAddresses' <- liftAff $ CW.getUsedAddresses wallet.api { limit: 10, page: 0 }
-    log $ "got used addresses: " <> show usedAddresses'
-    let usedAddresses = traverse Csl.address.fromHex usedAddresses'
+    -- get used addresses
+    usedAddresses <- liftAff $ traverse Csl.address.fromHex <$> CW.getUsedAddresses wallet.api { limit: 10, page: 0 }
     _ <- H.modify \maybeWallet -> _ { usedAddresses = usedAddresses } <$> maybeWallet
-    -- CW.getUtxos :: Api -> Maybe Paginate -> Aff (Array Cbor)
-    utxos' <- liftAff $ CW.getUtxos wallet.api Nothing
-    log $ "got utxos (cbor): " <> show utxos'
-    -- Csl.fromHex :: ∀ a. TxUnspentOut a => String -> Maybe a
-    -- Csl.txUnspentOut.out :: TxUnspentOut -> TxOut
-    let utxos = sequence $ map Csl.txUnspentOut.out <$> Csl.fromHex <$> utxos' 
-
-    log $ "fromHex utxos: " <> show utxos
+    -- get utxos
+    utxos <- liftAff $ traverse Csl.txUnspentOut.fromHex <$> CW.getUtxos wallet.api Nothing
     _ <- H.modify \maybeWallet -> _ { utxos = utxos } <$> maybeWallet
     pure unit
 
