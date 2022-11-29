@@ -74,8 +74,6 @@ form = F.formless { liftAction: Eval } mempty $ H.mkComponent
           [ HH.label_ [ HH.text "Recipient" ]
           , HH.input
               [ HP.type_ HP.InputText
-              -- TODO/FIXME: remove initial value -- Bob's receive address
-              , HP.value "addr_test1qznmqqqyxkp08nqs3aqad656g8fmv44aff75t50t2k36xeu5qzxmtuqute0p6aynkw274nq5f0w8ngn7wzyn64nzawzqhw0htt"
               , HE.onValueInput actions.recipient.handleChange
               , HE.onBlur actions.recipient.handleBlur
               , case fields.recipient.result of
@@ -92,8 +90,6 @@ form = F.formless { liftAction: Eval } mempty $ H.mkComponent
           [ HH.label_ [ HH.text "Amount" ]
           , HH.input
               [ HP.type_ HP.InputText
-              -- TODO/FIXME: remove initial value -- 1 ADA = 1,000,000 Lovelace
-              , HP.value "1000000"
               , HE.onValueInput actions.amount.handleChange
               , HE.onBlur actions.amount.handleBlur
               , case fields.amount.result of

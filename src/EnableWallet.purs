@@ -1,11 +1,11 @@
 module EnableWallet (Output(..), component) where
 
-import Prelude (Unit, bind, const, discard, flip, map, pure, show, unit, ($), (<$>), (<>))
+import Prelude (Unit, bind, const, discard, pure, show, unit, ($), (<$>), (<>))
 
 import Csl as Csl
 import Data.Maybe (Maybe(..))
 import Data.Int (floor)
-import Data.Traversable (sequence, traverse)
+import Data.Traversable (traverse)
 import Effect.Aff (Aff)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (liftEffect)

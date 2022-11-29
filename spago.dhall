@@ -26,6 +26,7 @@ to generate this file without the comments in this block.
   , "prelude"
   , "purescript-cardano-serialization-lib"
   , "purescript-cip30"
+  , "transformers"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
