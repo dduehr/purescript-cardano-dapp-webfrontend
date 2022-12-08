@@ -18,15 +18,20 @@ to generate this file without the comments in this block.
   , "datetime"
   , "effect"
   , "either"
+  , "enums"
   , "foldable-traversable"
   , "halogen"
   , "halogen-formless"
   , "integers"
   , "maybe"
   , "prelude"
+  , "profunctor-lenses"
   , "purescript-cardano-serialization-lib"
   , "purescript-cip30"
   , "transformers"
+  , "tuples"
+  , "type-equality"
+  , "unfoldable"
   ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
