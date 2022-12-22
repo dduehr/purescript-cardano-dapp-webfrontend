@@ -1,4 +1,4 @@
-module Qapla.Component.Utils where
+module Example.Component.Utils where
 
 import Prelude
 

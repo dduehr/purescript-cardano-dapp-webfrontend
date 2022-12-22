@@ -1,4 +1,4 @@
-module Qapla.Api.WalletName (unwrap) where
+module Example.Api.WalletName (unwrap) where
 
 import Cardano.Wallet (WalletName(..))
 
