@@ -27,6 +27,7 @@ import Example.Component.SendTokenToAddress (component) as SendTokenToAddress
 import Example.Component.SendTokenToContract (component) as SendTokenToContract
 import Example.Component.Utils (css)
 import Example.Store (Action, Store) as Store
+import Example.Store.Connect (inputAll) as Store.Connect
 
 data State 
   = Selected MenuItem
@@ -132,7 +133,7 @@ component =
     menuLabel RedeemTokenFromContract = "Redeem Token from Smart Contract"
 
     menuContent :: MenuItem -> H.ComponentHTML Action Slots m
-    menuContent SendAdaToAddress        = HH.slot_ (Proxy :: _ "sendAdaToAddress") unit SendAdaToAddress.form unit
+    menuContent SendAdaToAddress        = HH.slot_ (Proxy :: _ "sendAdaToAddress") unit (Store.Connect.inputAll SendAdaToAddress.form) unit
     menuContent SendTokenToAddress      = HH.slot_ (Proxy :: _ "sendTokenToAddress") unit SendTokenToAddress.component unit 
     menuContent SendAdaToContract       = HH.slot_ (Proxy :: _ "sendAdaToContract") unit SendAdaToContract.component unit
     menuContent SendTokenToContract     = HH.slot_ (Proxy :: _ "sendTokenToContract") unit SendTokenToContract.component unit

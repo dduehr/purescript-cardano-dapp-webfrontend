@@ -4,7 +4,7 @@ import Prelude
 
 import Cardano.Wallet (availableWallets, enable, getApiVersion, getChangeAddress, getIcon, getName, getUtxos, signTx, submitTx) as CW
 import Control.Monad.Error.Class (try)
-import Control.Monad.Except.Trans (ExceptT(..), throwError)
+import Control.Monad.Except.Trans (throwError)
 import Csl (TxUnspentOuts, address, auxiliaryData, toMutableList, tx, txBuilder, txOut, txUnspentOut, txWitnessSet, value) as Csl
 import Data.Array (filter, intercalate)
 import Data.Either (Either(..), note)
@@ -25,6 +25,7 @@ import Example.Capability.Resource.Address (class ManageAddress)
 import Example.Capability.Resource.Contract (class ManageContract) 
 import Example.Capability.Resource.Wallet (class ManageWallet)
 import Example.Capability.Resource.WebPage (class ManageWebPage)
+import Example.Component.Utils (exceptAff)
 import Example.Store as Store
 
 newtype AppM a = AppM (StoreT Store.Action Store.Store Aff a)
@@ -43,14 +44,6 @@ derive newtype instance monadStoreAppM :: MonadStore Store.Action Store.Store Ap
 
 type Error = String
 type TxId  = String
-
--- FXIME: move to ?.Util
-exceptAff :: ∀ a m. MonadAff m => Aff (Either Error a) -> ExceptT Error m a    
-exceptAff = ExceptT <<< liftAff
-
-exceptM :: ∀ a m. Monad m => m (Either Error a) -> ExceptT Error m a
-exceptM = ExceptT
-
 instance manageWebPageAppM :: ManageWebPage AppM where
   availableWallets =
     let

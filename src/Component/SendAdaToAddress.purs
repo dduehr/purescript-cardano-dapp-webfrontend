@@ -2,9 +2,11 @@ module Example.Component.SendAdaToAddress (form) where
 
 import Prelude
 
+import Control.Monad.Except.Trans (runExceptT)
+import Control.Monad.State.Class (get)
 import Csl as Csl
 import Data.Either (Either(..))
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), isNothing)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class.Console (log)
 import Formless as F
@@ -13,10 +15,11 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 
-import Example.Capability.Resource.Address (class ManageAddress)
+import Example.Capability.Resource.Address (class ManageAddress, sendAdaToAddress)
 import Example.Component.Utils (css)
+import Example.Store as Store
 
-type Input = Unit
+type Input = Store.Store
 
 type State = FormContext
 
@@ -63,8 +66,7 @@ form =
           { recipient: validBech32
           , amount: validBigNum
           }
-      --F.handleSubmitValidate F.raise F.validate validation
-      F.handleSubmitValidate (const $ log "TODO: sendAdaToAddress api cfg fields") F.validate validation
+      F.handleSubmitValidate onSubmit F.validate validation
 
     validBech32 :: String -> Either String Csl.Address
     validBech32 input =
@@ -78,8 +80,23 @@ form =
           Just val -> Right val
           _ -> Left "Invalid number"
 
+    onSubmit :: { | Form F.FieldOutput } -> H.HalogenM _ _ _ _ _ Unit
+    onSubmit fields = do
+      { input } <- get
+      -- FIXME: no "case cascade"
+      result <- case input.wallet of
+        Nothing -> pure $ Left "no wallet"
+        Just { api } -> case input.txBuilderConfig of
+          Nothing -> pure $ Left "no api"
+          Just config -> H.lift $ runExceptT $ sendAdaToAddress api config { recipientAddress: fields.recipient, lovelaceAmount: fields.amount }
+      -- TODO: show modal message box    
+      case result of
+        Left error -> H.lift $ log error
+        Right a -> H.lift $ log $ show a
+      pure unit
+
     render :: State -> H.ComponentHTML Action () m
-    render { formActions, fields, actions } =
+    render { input, formActions, fields, actions } =
       HH.form [ css "pl-3 mt-3" , HE.onSubmit formActions.handleSubmit ]
         [ HH.div [ css "field" ]
           [ HH.label [ css "label" ]
@@ -126,7 +143,7 @@ form =
               _ -> HH.div_ []
           ]
         , HH.div [ css "field" ]
-          [ HH.button [ css "button is-medium is-success" ] 
+          [ HH.button [ css "button is-medium is-success", HP.disabled $ isNothing input.wallet ] 
             [ HH.text "Submit" ]
           ]
         ]
