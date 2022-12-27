@@ -3,8 +3,9 @@ module Example.Component.WalletView (component) where
 import Prelude
 
 import Cardano.Wallet (Api, NetworkId, WalletName)
-import Cardano.Wallet (getApiVersion, enable, getBalance, getChangeAddress, getName, getNetworkId, getRewardAddresses, getUsedAddresses, getUtxos) as CW
+import Cardano.Wallet (getApiVersion, getBalance, getChangeAddress, getName, getNetworkId, getRewardAddresses, getUsedAddresses, getUtxos) as CW
 import Csl (Address, BigNum, TxUnspentOut, address, bigNum, fromHex, txHash, txIn, txOut, txUnspentOut, value) as Csl
+import Data.Array.NonEmpty (fromArray, head)
 import Data.Int (floor)
 import Data.Lens (Lens', Prism', prism', set)
 import Data.Lens.Record (prop)
@@ -77,22 +78,28 @@ component =
 
     render :: State -> H.ComponentHTML Action () m
     render (Received context) =
-      renderContext context
+      HH.div [ css "card p-4" ]
+        [ HH.h2 [ css "title is-5 mb-3" ]
+            [ HH.text "Wallet" ]
+        , renderContext context
+        ]
+
     render (Loaded wallet) =
-      HH.div_
-        [ HH.h2 [ css "title is-4" ]
-          [ HH.text $ "Wallet" ]
+      HH.div [ css "card p-4" ]
+        [ HH.h2 [ css "title is-5 mb-3" ]
+            [ HH.text "Wallet" ]
         , renderWallet wallet 
         ]
 
     renderContext :: ∀ w i. Context -> HH.HTML w i
     renderContext Nothing = 
-      HH.text "No wallet selected"
+      HH.text "No wallet connected"
+
     renderContext (Just wallet) =
       HH.span_
-        [ HH.text "Wallet "
+        [ HH.text "Connecting to wallet "
         , HH.text $ WalletName.unwrap wallet.name
-        , HH.text " selected ..."
+        , HH.text " ..."
         ]
 
     renderWallet :: ∀ w i. Wallet -> HH.HTML w i
@@ -119,7 +126,7 @@ component =
             , HH.td_ [ renderUtxos wallet.utxos ]
             ]
         , HH.tr_
-            [ HH.th_ [ HH.text "Change Addresses" ]
+            [ HH.th_ [ HH.text "Change Address" ]
             , HH.td_ [ renderChangeAddress wallet.changeAddress ]
             ]
         , HH.tr_
@@ -139,20 +146,43 @@ component =
     renderUtxos :: ∀ w i. Maybe (Array Csl.TxUnspentOut) -> HH.HTML w i
     renderUtxos Nothing = renderSpinner
     renderUtxos (Just utxos) =
-      HH.div [ css "list" ]
-        [ HH.ul_ $ renderUtxo <$> utxos ]
+      case fromArray utxos of
+        Nothing ->
+          HH.div_ []
+        Just nonEmptyUtxos -> 
+          HH.div [ css "dropdown is-hoverable is-flex" ]
+            [ HH.div [ css "dropdown-trigger is-fullwidth" ]
+                [ HH.span [ {- aria-haspopup="true" aria-controls="dropdown-menu4" -}]
+                    [ HH.text $ formatUtxo $ head nonEmptyUtxos ]
+                , HH.text " "
+                , HH.span [ css "icon is-small" ]
+                    [ HH.i [ css "fas fa-angle-down" {-, aria-hidden="true" -} ] [] ]
+                ]
+            , HH.div [ css "dropdown-menu is-fullwidth" ]
+                [ HH.div [ css "dropdown-content" ]
+                    [ HH.div [ css "dropdown-item" ]
+                        [ HH.div [ css "list" ]
+                            [ HH.ul_
+                                ( renderUtxo <$> utxos )
+                            ]
+                        ]
+                    ]
+                ]
+            ]
 
     renderUtxo :: ∀ w i. Csl.TxUnspentOut -> HH.HTML w i
     renderUtxo utxo =
       HH.div [ css "list-item" ]
         [ HH.li_
-          [ HH.text $ Csl.txHash.toHex $ Csl.txIn.txId $ Csl.txUnspentOut.in utxo
-          , HH.text " #"
-          , HH.text $ show $ floor $ Csl.txIn.index $ Csl.txUnspentOut.in utxo
-          , HH.text " = "
-          , HH.text $ Csl.bigNum.toStr $ Csl.value.coin $ Csl.txOut.amount  $ Csl.txUnspentOut.out utxo
-          ]
+          [ HH.text $ formatUtxo utxo ]
         ]
+
+    formatUtxo :: Csl.TxUnspentOut -> String
+    formatUtxo utxo = Csl.txHash.toHex (Csl.txIn.txId $ Csl.txUnspentOut.in utxo)
+      <> " #"
+      <> show (floor $ Csl.txIn.index $ Csl.txUnspentOut.in utxo)
+      <> " "
+      <> Csl.bigNum.toStr (Csl.value.coin $ Csl.txOut.amount $ Csl.txUnspentOut.out utxo)
 
     renderChangeAddress :: ∀ w i. Maybe (Csl.Address) -> HH.HTML w i
     renderChangeAddress Nothing = renderSpinner
@@ -161,21 +191,67 @@ component =
     renderRewardAddresses :: ∀ w i. Maybe (Array Csl.Address) -> HH.HTML w i
     renderRewardAddresses Nothing = renderSpinner
     renderRewardAddresses (Just rewardAddresses) =
-      HH.div [ css "list" ]
-        [ HH.ul_ $ renderAddress <$> rewardAddresses ]
+      case fromArray rewardAddresses of
+        Nothing ->
+          HH.div_ []
+        Just nonEmptyRewardAddresses ->
+          HH.div [ css "dropdown is-hoverable is-flex" ]
+            [ HH.div [ css "dropdown-trigger is-fullwidth" ]
+                [ HH.span [ {- aria-haspopup="true" aria-controls="dropdown-menu4" -}]
+                    [ HH.text $ formatAddress $ head nonEmptyRewardAddresses ]
+                , HH.text " "
+                , HH.span [ css "icon is-small" ]
+                    [ HH.i [ css "fas fa-angle-down" {-, aria-hidden="true" -} ] [] ]
+                ]
+            , HH.div [ css "dropdown-menu is-fullwidth" ]
+                [ HH.div [ css "dropdown-content" ]
+                    [ HH.div [ css "dropdown-item" ]
+                        [ HH.div [ css "list" ]
+                            [ HH.ul_
+                                ( renderAddress <$> rewardAddresses )
+                            ]
+                        ]
+                    ]
+                ]
+            ]
 
     renderUsedAddresses :: ∀ w i. Maybe (Array Csl.Address) -> HH.HTML w i
     renderUsedAddresses Nothing = renderSpinner
     renderUsedAddresses (Just usedAddresses) =
-      HH.div [ css "list" ]
-        [ HH.ul_ $ renderAddress <$> usedAddresses ]
+      case fromArray usedAddresses of
+        Nothing ->
+          HH.div_ []
+        Just nonEmptyUsedAddresses ->
+          HH.div [ css "dropdown is-hoverable is-flex" ]
+            [ HH.div [ css "dropdown-trigger is-fullwidth" ]
+                [ HH.span [ {- aria-haspopup="true" aria-controls="dropdown-menu4" -}]
+                    [ HH.text $ formatAddress $ head nonEmptyUsedAddresses ]
+                , HH.text " "
+                , HH.span [ css "icon is-small" ]
+                    [ HH.i [ css "fas fa-angle-down" {-, aria-hidden="true" -} ] [] ]
+                ]
+            , HH.div [ css "dropdown-menu is-fullwidth" ]
+                [ HH.div [ css "dropdown-content" ]
+                    [ HH.div [ css "dropdown-item" ]
+                        [ HH.div [ css "list" ]
+                            [ HH.ul_
+                                ( renderAddress <$> usedAddresses )
+                            ]
+                        ]
+                    ]
+                ]
+            ]
 
     renderAddress :: ∀ w i. Csl.Address -> HH.HTML w i
     renderAddress address =
       HH.div [ css "list-item" ]
         [ HH.li_
-          [ HH.text $ Csl.address.toBech32 address Nothing ]
+          [ HH.text $ formatAddress address ]
         ]
+
+    formatAddress :: Csl.Address -> String
+    formatAddress address =
+      Csl.address.toBech32 address Nothing
 
     renderSpinner :: ∀ w i. HH.HTML w i
     renderSpinner =

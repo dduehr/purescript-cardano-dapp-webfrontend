@@ -15,15 +15,15 @@ import Example.Capability.Resource.Contract (class ManageContract)
 import Example.Capability.Resource.Wallet (class ManageWallet)
 import Example.Capability.Resource.WebPage (class ManageWebPage)
 import Example.Component.Utils (css)
-import Example.Component.WalletTabMenu (component) as WalletTabMenu
+import Example.Component.WalletActions (component) as WalletActions
 import Example.Component.WalletView (component) as WalletView
 import Example.Component.WalletsDropDown (component) as WalletsDropDown
 import Example.Store (Action, Store) as Store
 
 type Slots =
   ( walletsDropDown :: ∀ query. H.Slot query Void Unit
+  , walletActions :: ∀ query. H.Slot query Void Unit
   , walletView :: ∀ query. H.Slot query Void Unit
-  , walletTabMenu :: ∀ query. H.Slot query Void Unit
   )
 
 component 
@@ -53,17 +53,15 @@ component =
                 ]
             , HH.div [ css "navbar-menu" ]
                 [ HH.div [ css "navbar-start" ]
-                    [ HH.div [ css "navbar-item has-text-weight-bold" ]
-                      [ HH.small_ 
-                          [ HH.text "Cardano DApp Connection Example" ]
-                      ]
+                    [ HH.div [ css "navbar-item title is-5" ]
+                      [ HH.text "Cardano DApp Connection Example" ]
                     ]
                 , HH.div [ css "navbar-end" ]
                     [ HH.slot_ (Proxy :: _ "walletsDropDown") unit WalletsDropDown.component unit ]
                 ]
             ]
-        , HH.section [ css "section" ] 
+        , HH.section [ css "section pt-6 pb-0" ] 
+            [ HH.slot_ (Proxy :: _ "walletActions") unit WalletActions.component unit ]
+        , HH.section [ css "section pt-6" ] 
             [ HH.slot_ (Proxy :: _ "walletView") unit WalletView.component unit ]
-        , HH.section [ css "section" ] 
-            [ HH.slot_ (Proxy :: _ "walletTabMenu") unit WalletTabMenu.component unit ]
         ]
