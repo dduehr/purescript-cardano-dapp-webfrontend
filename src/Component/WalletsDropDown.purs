@@ -1,4 +1,7 @@
-module Example.Component.WalletsDropDown (component) where
+module Example.Component.WalletsDropDown 
+  ( component
+  , Message(..)
+  ) where
 
 import Prelude
 
@@ -36,15 +39,25 @@ type Wallet =
   , icon :: String
   }
 
-data Action = Initialize | FindWallets | SelectWallet Wallet | DeselectWallet
+data Action
+  = Initialize 
+  | FindWallets 
+  | SelectWallet Wallet
+  | DeselectWallet
+  | RaiseReloadWallet 
+
+type Output = Message
+
+data Message
+  = ReloadWallet
 
 component
-  :: ∀ query input output m
+  :: ∀ query input m
    . MonadAff m
   => MonadStore Store.Action Store.Store m
   => ManageWebPage m
   => ManageWallet m
-  => H.Component query input output m
+  => H.Component query input Output m
 component =
   H.mkComponent
     { initialState: const Nothing
@@ -84,7 +97,7 @@ component =
                 [ HH.text wallet.name ]
             ]
         , HH.div [ css "navbar-dropdown is-right" ]
-            [ HH.a [ css "navbar-item pr-4" {-, HE.onClick \_ -> ReloadWallet -}]
+            [ HH.a [ css "navbar-item pr-4", HE.onClick \_ -> RaiseReloadWallet ]
                 [ HH.div [ css "is-align-items-center is-flex" ]
                     [ HH.span [ css "icon is-small" ]
                         [ HH.i [ css "fa fa-refresh" ] [] ]
@@ -115,7 +128,7 @@ component =
               ]
           ]
 
-    handleAction :: Action -> H.HalogenM State Action () output m Unit
+    handleAction :: Action -> H.HalogenM State Action () Output m Unit
     handleAction = case _ of
       Initialize -> do
         _ <- H.fork $ delayAction FindWallets $ Milliseconds 1000.0
@@ -143,8 +156,11 @@ component =
         updateStore $ Store.DisableWallet
         pure unit
 
+      RaiseReloadWallet -> do
+        H.raise ReloadWallet
+
     -- TODO: Extract to effectful type class
-    delayAction :: Action -> Milliseconds -> H.HalogenM State Action () output m Unit
+    delayAction :: Action -> Milliseconds -> H.HalogenM State Action () Output m Unit
     delayAction action ms = do
       H.liftAff $ Aff.delay ms
       handleAction action

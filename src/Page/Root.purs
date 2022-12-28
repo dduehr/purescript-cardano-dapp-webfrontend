@@ -16,14 +16,17 @@ import Example.Capability.Resource.Wallet (class ManageWallet)
 import Example.Capability.Resource.WebPage (class ManageWebPage)
 import Example.Component.Utils (css)
 import Example.Component.WalletActions (component) as WalletActions
-import Example.Component.WalletView (component) as WalletView
-import Example.Component.WalletsDropDown (component) as WalletsDropDown
+import Example.Component.WalletView (component, Query(..)) as WalletView
+import Example.Component.WalletsDropDown (component, Message(..)) as WalletsDropDown
 import Example.Store (Action, Store) as Store
 
+data Action
+  = HandleWalletsDropDown WalletsDropDown.Message 
+
 type Slots =
-  ( walletsDropDown :: ∀ query. H.Slot query Void Unit
+  ( walletsDropDown :: ∀ query. H.Slot query WalletsDropDown.Message Unit
   , walletActions :: ∀ query. H.Slot query Void Unit
-  , walletView :: ∀ query. H.Slot query Void Unit
+  , walletView :: H.Slot WalletView.Query Void Unit
   )
 
 component 
@@ -39,11 +42,17 @@ component =
   H.mkComponent
     { initialState: const Nothing
     , render
-    , eval: H.mkEval H.defaultEval 
+    , eval: H.mkEval $ H.defaultEval
+      { handleAction = handleAction } 
     }
   where
 
-    render :: ∀ action state. state -> H.ComponentHTML action Slots m
+    handleAction :: ∀ state. Action -> H.HalogenM state Action Slots output m Unit
+    handleAction = case _ of
+      HandleWalletsDropDown WalletsDropDown.ReloadWallet ->
+        H.tell (Proxy :: _ "walletView") unit WalletView.ReloadWallet
+
+    render :: ∀ state. state -> H.ComponentHTML Action Slots m
     render _ =
       HH.div_
         [ HH.nav [ css "navbar has-shadow" ]
@@ -57,7 +66,7 @@ component =
                       [ HH.text "Cardano DApp Connection Example" ]
                     ]
                 , HH.div [ css "navbar-end" ]
-                    [ HH.slot_ (Proxy :: _ "walletsDropDown") unit WalletsDropDown.component unit ]
+                    [ HH.slot (Proxy :: _ "walletsDropDown") unit WalletsDropDown.component unit HandleWalletsDropDown ]
                 ]
             ]
         , HH.section [ css "section pt-6 pb-0" ] 

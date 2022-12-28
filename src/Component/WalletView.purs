@@ -1,4 +1,7 @@
-module Example.Component.WalletView (component) where
+module Example.Component.WalletView
+  ( component
+  , Query(..)
+  ) where
 
 import Prelude
 
@@ -26,6 +29,9 @@ import Example.Store (Action, Store, Wallet) as Store
 
 type Input = Unit
 
+data Query a
+  = ReloadWallet a
+
 type Context = Maybe Store.Wallet
 
 data State 
@@ -50,16 +56,17 @@ data Action
   | Reload
 
 component
-  :: ∀ query output m
+  :: ∀ output m 
    . MonadAff m
   => MonadStore Store.Action Store.Store m
-  => H.Component query Input output m
+  => H.Component Query Input output m
 component =
   connect selectContext $ H.mkComponent
     { initialState: deriveState
     , render
     , eval: H.mkEval $ H.defaultEval 
       { handleAction = handleAction
+      , handleQuery = handleQuery
       , receive = Just <<< Receive
       }
     }
@@ -262,6 +269,7 @@ component =
     handleAction = case _ of
       Receive { context: Nothing } ->
         H.put $ Received Nothing
+
       Receive { context: Just wallet } -> do
         H.put $ Received $ Just wallet
         name <- liftEffect $ CW.getName wallet.name
@@ -280,20 +288,32 @@ component =
           , utxos: Nothing
           } 
         handleAction Reload
+
       Reload -> do
         state <- H.get
         case state of
+
           (Loaded wallet) -> do
+            H.modify_ \state' -> set (_Loaded <<< _balance) Nothing state'
             balance <- H.liftAff $ Csl.fromHex <$> CW.getBalance wallet.api 
             H.modify_ \state' -> set (_Loaded <<< _balance) balance state'
+
+            H.modify_ \state' -> set (_Loaded <<< _changeAddress) Nothing state'
             changeAddress <- H.liftAff $ Csl.fromHex <$> CW.getChangeAddress wallet.api
             H.modify_ \state' -> set (_Loaded <<< _changeAddress) changeAddress state'
+
+            H.modify_ \state' -> set (_Loaded <<< _rewardAddresses) Nothing state'
             rewardAddresses <- liftAff $ traverse Csl.address.fromHex <$> CW.getRewardAddresses wallet.api
             H.modify_ \state' -> set (_Loaded <<< _rewardAddresses) rewardAddresses state'
+
+            H.modify_ \state' -> set (_Loaded <<< _usedAddresses) Nothing state'
             usedAddresses <- liftAff $ traverse Csl.address.fromHex <$> CW.getUsedAddresses wallet.api { limit: 10, page: 0 }
             H.modify_ \state' -> set (_Loaded <<< _usedAddresses) usedAddresses state'
+
+            H.modify_ \state' -> set (_Loaded <<< _utxos) Nothing state' 
             utxos <- liftAff $ traverse Csl.txUnspentOut.fromHex <$> CW.getUtxos wallet.api Nothing
             H.modify_ \state' -> set (_Loaded <<< _utxos) utxos state' 
+
           _ -> pure unit
 
     _Loaded :: Prism' State Wallet 
@@ -315,3 +335,9 @@ component =
 
     _utxos :: Lens' Wallet (Maybe (Array Csl.TxUnspentOut))
     _utxos = prop (Proxy :: Proxy "utxos")
+
+    handleQuery :: ∀ a. Query a -> H.HalogenM State Action () output m (Maybe a)
+    handleQuery = case _ of
+      ReloadWallet a -> do
+        _ <- handleAction Reload
+        pure $ Just a
