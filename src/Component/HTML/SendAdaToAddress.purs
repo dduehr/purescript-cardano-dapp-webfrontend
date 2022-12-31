@@ -20,6 +20,7 @@ import Halogen.Store.Select (selectAll)
 
 import Example.Capability.Resource.Address (class ManageAddress, sendAdaToAddress)
 import Example.Component.HTML.Utils (css)
+import Example.Form.Validation (bech32Format, bigNumFormat)
 import Example.Store as Store
 
 type Input = Unit
@@ -73,24 +74,10 @@ component =
       let
         validation :: { | Form F.FieldValidation }
         validation =
-          { recipient: validBech32
-          , amount: validBigNum
+          { recipient: bech32Format
+          , amount: bigNumFormat
           }
       F.handleSubmitValidate onSubmit F.validate validation
-
-    -- TODO: note ...
-    validBech32 :: String -> Either String Csl.Address
-    validBech32 input =
-      case Csl.address.fromBech32 input of
-          Just val -> Right val
-          _ -> Left "Invalid address"
-
-    -- TODO: note ...
-    validBigNum :: String -> Either String Csl.BigNum
-    validBigNum input =
-      case Csl.bigNum.fromStr input of
-          Just val -> Right val
-          _ -> Left "Invalid number"
 
     onSubmit :: { | Form F.FieldOutput } -> H.HalogenM _ _ _ _ _ Unit
     onSubmit fields = do
