@@ -1,4 +1,4 @@
-module Example.Component.SendAdaToAddress (form) where
+module Example.Component.HTML.SendAdaToAddress (component) where
 
 import Prelude
 
@@ -14,18 +14,15 @@ import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
+import Halogen.Store.Connect (Connected, connect)
+import Halogen.Store.Monad (class MonadStore)
+import Halogen.Store.Select (selectAll)
 
 import Example.Capability.Resource.Address (class ManageAddress, sendAdaToAddress)
-import Example.Component.Utils (css)
+import Example.Component.HTML.Utils (css)
 import Example.Store as Store
 
-type Input = Store.Store
-
-type State = FormContext
-
-data Action
-  = Receive FormContext
-  | Eval FormlessAction
+type Input = Unit
 
 type Form :: (Type -> Type -> Type -> Type) -> Row Type
 type Form f =
@@ -36,14 +33,24 @@ type Form f =
 type FormContext = F.FormContext (Form F.FieldState) (Form (F.FieldAction Action)) Input Action
 type FormlessAction = F.FormlessAction (Form F.FieldState)
 
-form
+data Action
+  = Receive (Connected Store.Store FormContext)
+  | Eval FormlessAction
+
+type State = 
+  { store :: Store.Store
+  , form :: FormContext
+  }
+
+component
   :: ∀ query output m
    . MonadAff m
+  => MonadStore Store.Action Store.Store m
   => ManageAddress m
   => H.Component query Input output m
-form =
-  F.formless { liftAction: Eval } mempty $ H.mkComponent
-    { initialState: \context -> context
+component =
+  F.formless { liftAction: Eval } mempty $ connect selectAll $ H.mkComponent
+    { initialState: deriveState
     , render
     , eval: H.mkEval $ H.defaultEval
       { receive = Just <<< Receive
@@ -53,9 +60,12 @@ form =
     }
   where
 
+    deriveState :: Connected Store.Store FormContext -> State
+    deriveState { context: store, input: form } = { store, form }
+
     handleAction :: Action -> H.HalogenM _ _ _ _ _ Unit
     handleAction = case _ of
-      Receive formContext -> H.put formContext
+      Receive connected -> H.put $ deriveState connected
       Eval formlessAction -> F.eval formlessAction
 
     handleQuery :: ∀ a. F.FormQuery _ _ _ _ a -> H.HalogenM _ _ _ _ _ (Maybe a)
@@ -68,12 +78,14 @@ form =
           }
       F.handleSubmitValidate onSubmit F.validate validation
 
+    -- TODO: note ...
     validBech32 :: String -> Either String Csl.Address
     validBech32 input =
       case Csl.address.fromBech32 input of
           Just val -> Right val
           _ -> Left "Invalid address"
 
+    -- TODO: note ...
     validBigNum :: String -> Either String Csl.BigNum
     validBigNum input =
       case Csl.bigNum.fromStr input of
@@ -82,11 +94,11 @@ form =
 
     onSubmit :: { | Form F.FieldOutput } -> H.HalogenM _ _ _ _ _ Unit
     onSubmit fields = do
-      { input } <- get
-      -- FIXME: no "case cascade"
-      result <- case input.wallet of
+      { store: { wallet, txBuilderConfig } } <- get
+      -- FIXME: no "case cascade" (for_?)
+      result <- case wallet of
         Nothing -> pure $ Left "no wallet"
-        Just { api } -> case input.txBuilderConfig of
+        Just { api } -> case txBuilderConfig of
           Nothing -> pure $ Left "no api"
           Just config -> H.lift $ runExceptT $ sendAdaToAddress api config { recipientAddress: fields.recipient, lovelaceAmount: fields.amount }
       -- TODO: show modal message box    
@@ -96,7 +108,7 @@ form =
       pure unit
 
     render :: State -> H.ComponentHTML Action () m
-    render { input, formActions, fields, actions } =
+    render { store: { wallet }, form: { formActions, fields, actions } } =
       HH.form [ css "pl-3 mt-3" , HE.onSubmit formActions.handleSubmit ]
         [ HH.div [ css "field" ]
           [ HH.label [ css "label" ]
@@ -143,7 +155,7 @@ form =
               _ -> HH.div_ []
           ]
         , HH.div [ css "field" ]
-          [ HH.button [ css "button is-medium is-success", HP.disabled $ isNothing input.wallet ] 
+          [ HH.button [ css "button is-medium is-success", HP.disabled $ isNothing wallet ] 
             [ HH.text "Submit" ]
           ]
         ]

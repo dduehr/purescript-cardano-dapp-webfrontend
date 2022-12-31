@@ -14,10 +14,10 @@ import Example.Capability.Resource.Address (class ManageAddress)
 import Example.Capability.Resource.Contract (class ManageContract)
 import Example.Capability.Resource.Wallet (class ManageWallet)
 import Example.Capability.Resource.WebPage (class ManageWebPage)
-import Example.Component.Utils (css)
-import Example.Component.WalletActions (component) as WalletActions
-import Example.Component.WalletView (component, Query(..)) as WalletView
-import Example.Component.WalletsDropDown (component, Message(..)) as WalletsDropDown
+import Example.Component.HTML.Utils (css)
+import Example.Component.HTML.WalletActions (component) as WalletActions
+import Example.Component.HTML.WalletView (component, Query(..)) as WalletView
+import Example.Component.HTML.WalletsDropDown (component, Message(..)) as WalletsDropDown
 import Example.Store (Action, Store) as Store
 
 data Action

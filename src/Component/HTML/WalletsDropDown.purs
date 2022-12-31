@@ -1,4 +1,4 @@
-module Example.Component.WalletsDropDown 
+module Example.Component.HTML.WalletsDropDown 
   ( component
   , Message(..)
   ) where
@@ -22,7 +22,7 @@ import Halogen.Store.Monad (class MonadStore, updateStore)
 import Example.Api.WalletName (unwrap) as WalletName
 import Example.Capability.Resource.Wallet (class ManageWallet, enableWallet)
 import Example.Capability.Resource.WebPage (class ManageWebPage, availableWallets)
-import Example.Component.Utils (css)
+import Example.Component.HTML.Utils (css)
 import Example.Store (Action(..), Store) as Store
 
 type State = Maybe Choice

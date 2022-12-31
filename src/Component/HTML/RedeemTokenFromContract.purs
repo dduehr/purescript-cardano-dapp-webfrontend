@@ -1,4 +1,4 @@
-module Example.Component.RedeemTokenFromContract (component) where
+module Example.Component.HTML.RedeemTokenFromContract (component) where
 
 import Prelude (Unit, ($), (<<<))
 

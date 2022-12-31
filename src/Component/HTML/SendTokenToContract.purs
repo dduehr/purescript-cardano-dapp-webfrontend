@@ -1,4 +1,4 @@
-module Example.Component.RedeemAdaFromContract (component) where
+module Example.Component.HTML.SendTokenToContract (component) where
 
 import Prelude (Unit, ($), (<<<))
 
@@ -42,7 +42,7 @@ component =
     render _ = 
       HH.form_ -- TODO: disabled if (isNothing state)
         [
-          HH.text "TODO: RedeemAdaFromContract ..."
+          HH.text "TODO: SendTokenToContract ..."
         ]
 
     handleAction :: Action -> H.HalogenM State Action () output m Unit

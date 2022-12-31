@@ -25,7 +25,7 @@ import Example.Capability.Resource.Address (class ManageAddress)
 import Example.Capability.Resource.Contract (class ManageContract) 
 import Example.Capability.Resource.Wallet (class ManageWallet)
 import Example.Capability.Resource.WebPage (class ManageWebPage)
-import Example.Component.Utils (exceptAff)
+import Example.Component.HTML.Utils (exceptAff)
 import Example.Store as Store
 
 newtype AppM a = AppM (StoreT Store.Action Store.Store Aff a)

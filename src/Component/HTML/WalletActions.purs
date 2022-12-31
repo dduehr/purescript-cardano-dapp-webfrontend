@@ -1,4 +1,4 @@
-module Example.Component.WalletActions where
+module Example.Component.HTML.WalletActions where
 
 import Prelude
 
@@ -19,15 +19,14 @@ import Type.Proxy (Proxy(..))
 import Example.Capability.Resource.Address (class ManageAddress)
 import Example.Capability.Resource.Contract (class ManageContract)
 import Example.Capability.Resource.WebPage (class ManageWebPage)
-import Example.Component.RedeemAdaFromContract (component) as RedeemAdaFromContract 
-import Example.Component.RedeemTokenFromContract (component) as RedeemTokenFromContract 
-import Example.Component.SendAdaToAddress (form) as SendAdaToAddress 
-import Example.Component.SendAdaToContract (component) as SendAdaToContract 
-import Example.Component.SendTokenToAddress (component) as SendTokenToAddress 
-import Example.Component.SendTokenToContract (component) as SendTokenToContract
-import Example.Component.Utils (css)
-import Example.Store (Action, Store) as Store
-import Example.Store.Connect (inputAll) as Store.Connect
+import Example.Component.HTML.RedeemAdaFromContract (component) as RedeemAdaFromContract 
+import Example.Component.HTML.RedeemTokenFromContract (component) as RedeemTokenFromContract 
+import Example.Component.HTML.SendAdaToAddress (component) as SendAdaToAddress 
+import Example.Component.HTML.SendAdaToContract (component) as SendAdaToContract 
+import Example.Component.HTML.SendTokenToAddress (component) as SendTokenToAddress 
+import Example.Component.HTML.SendTokenToContract (component) as SendTokenToContract
+import Example.Component.HTML.Utils (css)
+import Example.Store as Store
 
 data State 
   = Selected MenuItem
@@ -60,7 +59,7 @@ type Slots =
 component
   :: ∀ query input output m
    . MonadAff m
-  => MonadStore Store.Action Store.Store m
+  => MonadStore Store.Action Store.Store m 
   => ManageWebPage m
   => ManageAddress m
   => ManageContract m
@@ -78,6 +77,7 @@ component =
       HH.div [ css "card p-4" ]
         [ HH.div [ css "dropdown is-hoverable" ]
             [ HH.div [ css "dropdown-trigger" ]
+                -- FIXME: aria...
                 [ HH.h3 [ css "title is-5 pl-0 ml-0 mb-3" {-, aria-haspopup="true" aria-controls="dropdown-menu" -} ]
                     [ HH.text $ menuLabel selected
                     , HH.text " "
@@ -85,6 +85,7 @@ component =
                         [ HH.i [ css "fas fa-angle-down" {-, aria-hidden="true" -} ] [] ]
                     ]
                 ]
+                -- FIXME: aria...
             , HH.div [ css "dropdown-menu" {-, id="dropdown-menu" role="menu" -} ]
                 [ HH.div [ css "dropdown-content" ]
                     ( renderMenuLabelWithDivider selected <$> menuItems )
@@ -102,6 +103,7 @@ component =
         else HH.a [ css "dropdown-item", HE.onClick \_ -> Select menuItem ]
                [ HH.text $ menuLabel menuItem ]
 
+    -- TODO: maybeElem or whenElem
     renderMenuLabelWithDivider :: MenuItem -> MenuItem -> H.ComponentHTML Action Slots m
     renderMenuLabelWithDivider selected menuItem =
       if menuItem == SendTokenToAddress
@@ -111,6 +113,7 @@ component =
                ]
         else renderMenuLabel selected menuItem
 
+    -- FIXME: use whenElem
     renderMenuContent :: MenuItem -> MenuItem -> H.ComponentHTML Action Slots m
     renderMenuContent selected menuItem =
       if menuItem == selected
@@ -119,6 +122,7 @@ component =
         else HH.div [ css "is-hidden" ]
                [ menuContent menuItem ]
 
+    -- TODO: generalize to Utils
     menuItems :: Array MenuItem
     menuItems = unfoldr (\maybeItem -> maybeItem >>= next) $ Just genericBottom
       where
@@ -133,7 +137,7 @@ component =
     menuLabel RedeemTokenFromContract = "Redeem Token from Smart Contract"
 
     menuContent :: MenuItem -> H.ComponentHTML Action Slots m
-    menuContent SendAdaToAddress        = HH.slot_ (Proxy :: _ "sendAdaToAddress") unit (Store.Connect.inputAll SendAdaToAddress.form) unit
+    menuContent SendAdaToAddress        = HH.slot_ (Proxy :: _ "sendAdaToAddress") unit SendAdaToAddress.component unit
     menuContent SendTokenToAddress      = HH.slot_ (Proxy :: _ "sendTokenToAddress") unit SendTokenToAddress.component unit 
     menuContent SendAdaToContract       = HH.slot_ (Proxy :: _ "sendAdaToContract") unit SendAdaToContract.component unit
     menuContent SendTokenToContract     = HH.slot_ (Proxy :: _ "sendTokenToContract") unit SendTokenToContract.component unit

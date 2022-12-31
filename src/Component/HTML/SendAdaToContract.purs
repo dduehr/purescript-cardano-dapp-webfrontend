@@ -1,4 +1,4 @@
-module Example.Component.SendTokenToAddress (component) where
+module Example.Component.HTML.SendAdaToContract (component) where
 
 import Prelude (Unit, ($), (<<<))
 
@@ -9,7 +9,7 @@ import Halogen.Store.Connect (Connected, connect)
 import Halogen.Store.Monad (class MonadStore)
 import Halogen.Store.Select (selectAll)
 
-import Example.Capability.Resource.Address (class ManageAddress)
+import Example.Capability.Resource.Contract (class ManageContract)
 import Example.Store (Action, Store) as Store
 
 type Input = Unit
@@ -22,7 +22,7 @@ data Action =
 component
   :: ∀ query output m
    . MonadStore Store.Action Store.Store m
-  => ManageAddress m
+  => ManageContract m
   => H.Component query Input output m
 component =
   connect selectAll $ H.mkComponent
@@ -42,7 +42,7 @@ component =
     render _ = 
       HH.form_ -- TODO: disabled if (isNothing state)
         [
-          HH.text "TODO: SendTokenToAddress ..."
+          HH.text "TODO: SendAdaToContract ..."
         ]
 
     handleAction :: Action -> H.HalogenM State Action () output m Unit
