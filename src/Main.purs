@@ -14,7 +14,7 @@ import Example.Page.Root (component) as Root
 main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
-  let initialStore = { wallet: Nothing, txBuilderConfig: mkTxBuilderConfig }
+  let initialStore = { blacklist: [ "ccvault" ], wallet: Nothing, txBuilderConfig: mkTxBuilderConfig }
   rootComponent <- runAppM initialStore Root.component
   runUI rootComponent unit body
 

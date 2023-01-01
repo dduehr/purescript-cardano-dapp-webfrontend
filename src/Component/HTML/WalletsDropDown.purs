@@ -6,8 +6,7 @@ module Example.Component.HTML.WalletsDropDown
 import Prelude
 
 import Cardano.Wallet (WalletName)
-import Control.Monad.Except.Trans (runExceptT)
-import Data.Either (Either(..))
+import Data.Foldable (for_)
 import Data.Maybe (Maybe(..))
 import Data.Time.Duration (Milliseconds(..))
 import Effect.Aff as Aff
@@ -135,20 +134,16 @@ component =
         pure unit
 
       FindWallets -> do
-        availableWallets <- H.lift $ availableWallets
-        case availableWallets of
-          Just wallets -> H.modify_ \_ -> Just { wallets: wallets, selected: Nothing } 
-          _ -> log "Failed to determine available wallets"
+        mbWallets <- H.lift $ availableWallets
+        for_ mbWallets \wallets ->
+          H.modify_ \_ -> Just { wallets: wallets, selected: Nothing } 
 
       SelectWallet wallet -> do
         log $ "Wallet selected: " <> WalletName.unwrap wallet.id
-        enabledWallet <- H.lift $ runExceptT $ enableWallet wallet.id
-        case enabledWallet of
-          Right api -> do
+        mbApi <- H.lift $ enableWallet wallet.id
+        for_ mbApi \api -> do
             updateStore $ Store.EnableWallet { name: wallet.id, api: api }
             H.modify_ \state -> (\choice -> choice { selected = Just wallet }) <$> state
-          Left error -> do
-            log $ "Failed to enable wallet " <> WalletName.unwrap wallet.id <> ": " <> show error
 
       DeselectWallet -> do
         log "Wallet deselected"

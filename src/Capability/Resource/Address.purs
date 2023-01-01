@@ -3,8 +3,10 @@ module Example.Capability.Resource.Address where
 import Prelude
 
 import Cardano.Wallet (Api) as CW
-import Control.Monad.Except.Trans (ExceptT)
-import Csl (Address, BigNum, TxBuilderConfig) as Csl
+import Csl (Address, BigNum) as Csl
+import Data.Maybe (Maybe)
+import Example.Data.Transaction (TxId)
+import Halogen (HalogenM, lift) as H
 
 type SendAdaToAddressFields =
   { recipientAddress :: Csl.Address
@@ -16,12 +18,10 @@ type SendTokenToAddressFields =
   -- TBD ...
   }
 
-type Error = String
-type TxId  = String
-
 class Monad m <= ManageAddress m where
-  sendAdaToAddress :: CW.Api -> Csl.TxBuilderConfig -> SendAdaToAddressFields -> ExceptT Error m TxId
-  sendTokenToAddress :: CW.Api -> Csl.TxBuilderConfig -> SendTokenToAddressFields -> ExceptT Error m TxId
+  sendAdaToAddress :: CW.Api -> SendAdaToAddressFields -> m (Maybe TxId)
+  sendTokenToAddress :: CW.Api -> SendTokenToAddressFields -> m (Maybe TxId)
 
--- instance manageAddressHalogenM :: ManageAddress m => ManageAddress (H.HalogenM state action slots output m) where
---  sendAdaToAddress wallet = H.lift <<< sendAdaToAddress wallet
+instance manageAddressHalogenM :: ManageAddress m => ManageAddress (H.HalogenM state action slots output m) where
+  sendAdaToAddress api = H.lift <<< sendAdaToAddress api 
+  sendTokenToAddress api = H.lift <<< sendTokenToAddress api 

@@ -2,11 +2,11 @@ module Example.Component.HTML.SendAdaToAddress (component) where
 
 import Prelude
 
-import Control.Monad.Except.Trans (runExceptT)
 import Control.Monad.State.Class (get)
 import Csl as Csl
 import Data.Either (Either(..))
-import Data.Maybe (Maybe(..), isNothing)
+import Data.Foldable (for_)
+import Data.Maybe (Maybe(..), fromMaybe, isNothing)
 import Effect.Aff.Class (class MonadAff)
 import Effect.Class.Console (log)
 import Formless as F
@@ -20,15 +20,15 @@ import Halogen.Store.Select (selectAll)
 
 import Example.Capability.Resource.Address (class ManageAddress, sendAdaToAddress)
 import Example.Component.HTML.Utils (css)
-import Example.Form.Validation (bech32Format, bigNumFormat)
+import Example.Form.Validation (FormError, bech32Format, bigNumFormat)
 import Example.Store as Store
 
 type Input = Unit
 
 type Form :: (Type -> Type -> Type -> Type) -> Row Type
 type Form f =
-  ( recipient :: f String String Csl.Address
-  , amount    :: f String String Csl.BigNum
+  ( recipient :: f String FormError Csl.Address
+  , amount    :: f String FormError Csl.BigNum
   )
 
 type FormContext = F.FormContext (Form F.FieldState) (Form (F.FieldAction Action)) Input Action
@@ -81,18 +81,11 @@ component =
 
     onSubmit :: { | Form F.FieldOutput } -> H.HalogenM _ _ _ _ _ Unit
     onSubmit fields = do
-      { store: { wallet, txBuilderConfig } } <- get
-      -- FIXME: no "case cascade" (for_?)
-      result <- case wallet of
-        Nothing -> pure $ Left "no wallet"
-        Just { api } -> case txBuilderConfig of
-          Nothing -> pure $ Left "no api"
-          Just config -> H.lift $ runExceptT $ sendAdaToAddress api config { recipientAddress: fields.recipient, lovelaceAmount: fields.amount }
-      -- TODO: show modal message box    
-      case result of
-        Left error -> H.lift $ log error
-        Right a -> H.lift $ log $ show a
-      pure unit
+      { store } <- get
+      for_ store.wallet \wallet -> do
+        mbTxId <- sendAdaToAddress wallet.api { recipientAddress: fields.recipient, lovelaceAmount: fields.amount }
+        log $ "sendAdaToAddress: " <> fromMaybe "failed" mbTxId 
+      pure unit  
 
     render :: State -> H.ComponentHTML Action () m
     render { store: { wallet }, form: { formActions, fields, actions } } =

@@ -3,10 +3,22 @@ module Example.Capability.Resource.Wallet where
 import Prelude
 
 import Cardano.Wallet (Api, WalletName) as CW
-import Control.Monad.Except.Trans (ExceptT)
+import Csl as Csl
+import Data.Maybe (Maybe)
+import Halogen (HalogenM, lift) as H
 
-type Error = String
+import Example.Data.Transaction (TxId)
 
--- FIXME: Statt "ExceptT ..."" besser "m (Either Error CW.Api)"?
 class Monad m <= ManageWallet m where
-  enableWallet :: CW.WalletName -> ExceptT Error m CW.Api
+  enableWallet :: CW.WalletName -> m (Maybe CW.Api)
+  getTxUnspentOuts :: CW.Api -> m (Maybe Csl.TxUnspentOuts)
+  getChangeAddress :: CW.Api -> m (Maybe Csl.Address)
+  signTx :: CW.Api -> Csl.TxBody -> m (Maybe Csl.TxWitnessSet)
+  submitTx :: CW.Api -> Csl.TxBody -> Csl.TxWitnessSet -> m (Maybe TxId)
+
+instance manageWalletHalogenM :: ManageWallet m => ManageWallet (H.HalogenM state action slots output m) where
+  enableWallet = H.lift <<< enableWallet
+  getTxUnspentOuts = H.lift <<< getTxUnspentOuts
+  getChangeAddress  = H.lift <<< getChangeAddress
+  signTx walletApi = H.lift <<< signTx walletApi
+  submitTx walletApi txBody = H.lift <<< submitTx walletApi txBody

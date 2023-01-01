@@ -11,6 +11,10 @@ esbuild-cmd := "esbuild \
 build:
 	spago build 
 
+clean:
+	rm -r output/Example.*
+	rm -r output/Main/ 		
+
 test:
 	echo "TODO: implement purs tests"
 

@@ -3,8 +3,10 @@ module Example.Capability.Resource.Contract where
 import Prelude
 
 import Cardano.Wallet (Api) as CW
-import Control.Monad.Except.Trans (ExceptT)
-import Csl (Address, TxBuilderConfig) as Csl
+import Csl (Address) as Csl
+import Data.Maybe (Maybe)
+import Example.Data.Transaction (TxId)
+import Halogen (HalogenM, lift) as H
 
 type SendAdaToContractFields =
   { contractAddress :: Csl.Address
@@ -26,11 +28,14 @@ type RedeemTokenFromContractFields =
   -- TBD ...
   }
 
-type Error = String
-type TxId  = String
-
 class Monad m <= ManageContract m where
-  sendAdaToContract :: CW.Api -> Csl.TxBuilderConfig -> SendAdaToContractFields -> ExceptT Error m TxId
-  sendTokenToContract :: CW.Api -> Csl.TxBuilderConfig -> SendTokenToContractFields -> ExceptT Error m TxId
-  redeemAdaFromContract :: CW.Api -> Csl.TxBuilderConfig -> RedeemAdaFromContractFields -> ExceptT Error m TxId
-  redeemTokenFromContract :: CW.Api -> Csl.TxBuilderConfig -> RedeemTokenFromContractFields -> ExceptT Error m TxId
+  sendAdaToContract :: CW.Api -> SendAdaToContractFields -> m (Maybe TxId)
+  sendTokenToContract :: CW.Api -> SendTokenToContractFields -> m (Maybe TxId) 
+  redeemAdaFromContract :: CW.Api -> RedeemAdaFromContractFields -> m (Maybe TxId) 
+  redeemTokenFromContract :: CW.Api -> RedeemTokenFromContractFields -> m (Maybe TxId)
+
+instance manageContractHalogenM :: ManageContract m => ManageContract (H.HalogenM state action slots output m) where
+  sendAdaToContract api = H.lift <<< sendAdaToContract api 
+  sendTokenToContract api = H.lift <<< sendTokenToContract api 
+  redeemAdaFromContract api = H.lift <<< redeemAdaFromContract api 
+  redeemTokenFromContract api = H.lift <<< redeemTokenFromContract api 

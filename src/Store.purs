@@ -5,7 +5,8 @@ import Csl (TxBuilderConfig) as Csl
 import Data.Maybe (Maybe(..))
 
 type Store =
-  { wallet :: Maybe Wallet
+  { blacklist :: Array String 
+  , wallet :: Maybe Wallet
   , txBuilderConfig :: Maybe Csl.TxBuilderConfig
   }
 
