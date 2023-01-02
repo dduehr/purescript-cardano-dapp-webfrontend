@@ -1,13 +1,13 @@
 module Frontend.Store where
 
 import Cardano.Wallet (Api, WalletName) as CW
-import Csl (TxBuilderConfig) as Csl
+import Csl (TxBuilderConfig) as CS
 import Data.Maybe (Maybe(..))
 
 type Store =
   { blacklist :: Array String 
   , wallet :: Maybe Wallet
-  , txBuilderConfig :: Maybe Csl.TxBuilderConfig
+  , txBuilderConfig :: Maybe CS.TxBuilderConfig
   }
 
 -- FIXME: rename "name" to "id"

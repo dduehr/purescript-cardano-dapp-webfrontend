@@ -7,7 +7,7 @@ import Prelude
 
 import Cardano.Wallet (Api, NetworkId, WalletName)
 import Cardano.Wallet (getApiVersion, getBalance, getChangeAddress, getName, getNetworkId, getRewardAddresses, getUsedAddresses, getUtxos) as CW
-import Csl (Address, BigNum, TxUnspentOut, address, bigNum, fromHex, txHash, txIn, txOut, txUnspentOut, value) as Csl
+import Csl (Address, BigNum, TxUnspentOut, address, bigNum, fromHex, txHash, txIn, txOut, txUnspentOut, value) as CS
 import Data.Array.NonEmpty (fromArray, head)
 import Data.Int (floor)
 import Data.Lens (Lens', Prism', prism', set)
@@ -44,11 +44,11 @@ type Wallet =
   , apiVersion :: String
   , api :: Api
   , networkId :: NetworkId
-  , balance :: Maybe Csl.BigNum
-  , changeAddress :: Maybe Csl.Address
-  , rewardAddresses :: Maybe (Array Csl.Address)
-  , usedAddresses :: Maybe (Array Csl.Address)
-  , utxos :: Maybe (Array Csl.TxUnspentOut)
+  , balance :: Maybe CS.BigNum
+  , changeAddress :: Maybe CS.Address
+  , rewardAddresses :: Maybe (Array CS.Address)
+  , usedAddresses :: Maybe (Array CS.Address)
+  , utxos :: Maybe (Array CS.TxUnspentOut)
   }
 
 data Action 
@@ -146,11 +146,11 @@ component =
             ]
         ]
 
-    renderBalance :: ∀ w i. Maybe Csl.BigNum -> HH.HTML w i
+    renderBalance :: ∀ w i. Maybe CS.BigNum -> HH.HTML w i
     renderBalance Nothing = renderSpinner
-    renderBalance (Just balance) = HH.text $ Csl.bigNum.toStr balance
+    renderBalance (Just balance) = HH.text $ CS.bigNum.toStr balance
 
-    renderUtxos :: ∀ w i. Maybe (Array Csl.TxUnspentOut) -> HH.HTML w i
+    renderUtxos :: ∀ w i. Maybe (Array CS.TxUnspentOut) -> HH.HTML w i
     renderUtxos Nothing = renderSpinner
     renderUtxos (Just utxos) =
       case fromArray utxos of
@@ -177,25 +177,25 @@ component =
                 ]
             ]
 
-    renderUtxo :: ∀ w i. Csl.TxUnspentOut -> HH.HTML w i
+    renderUtxo :: ∀ w i. CS.TxUnspentOut -> HH.HTML w i
     renderUtxo utxo =
       HH.div [ css "list-item" ]
         [ HH.li_
           [ HH.text $ formatUtxo utxo ]
         ]
 
-    formatUtxo :: Csl.TxUnspentOut -> String
-    formatUtxo utxo = Csl.txHash.toHex (Csl.txIn.txId $ Csl.txUnspentOut.in utxo)
+    formatUtxo :: CS.TxUnspentOut -> String
+    formatUtxo utxo = CS.txHash.toHex (CS.txIn.txId $ CS.txUnspentOut.in utxo)
       <> " #"
-      <> show (floor $ Csl.txIn.index $ Csl.txUnspentOut.in utxo)
+      <> show (floor $ CS.txIn.index $ CS.txUnspentOut.in utxo)
       <> " "
-      <> Csl.bigNum.toStr (Csl.value.coin $ Csl.txOut.amount $ Csl.txUnspentOut.out utxo)
+      <> CS.bigNum.toStr (CS.value.coin $ CS.txOut.amount $ CS.txUnspentOut.out utxo)
 
-    renderChangeAddress :: ∀ w i. Maybe (Csl.Address) -> HH.HTML w i
+    renderChangeAddress :: ∀ w i. Maybe (CS.Address) -> HH.HTML w i
     renderChangeAddress Nothing = renderSpinner
-    renderChangeAddress (Just changeAddress) = HH.text $ Csl.address.toBech32 changeAddress Nothing
+    renderChangeAddress (Just changeAddress) = HH.text $ CS.address.toBech32 changeAddress Nothing
 
-    renderRewardAddresses :: ∀ w i. Maybe (Array Csl.Address) -> HH.HTML w i
+    renderRewardAddresses :: ∀ w i. Maybe (Array CS.Address) -> HH.HTML w i
     renderRewardAddresses Nothing = renderSpinner
     renderRewardAddresses (Just rewardAddresses) =
       case fromArray rewardAddresses of
@@ -222,7 +222,7 @@ component =
                 ]
             ]
 
-    renderUsedAddresses :: ∀ w i. Maybe (Array Csl.Address) -> HH.HTML w i
+    renderUsedAddresses :: ∀ w i. Maybe (Array CS.Address) -> HH.HTML w i
     renderUsedAddresses Nothing = renderSpinner
     renderUsedAddresses (Just usedAddresses) =
       case fromArray usedAddresses of
@@ -249,16 +249,16 @@ component =
                 ]
             ]
 
-    renderAddress :: ∀ w i. Csl.Address -> HH.HTML w i
+    renderAddress :: ∀ w i. CS.Address -> HH.HTML w i
     renderAddress address =
       HH.div [ css "list-item" ]
         [ HH.li_
           [ HH.text $ formatAddress address ]
         ]
 
-    formatAddress :: Csl.Address -> String
+    formatAddress :: CS.Address -> String
     formatAddress address =
-      Csl.address.toBech32 address Nothing
+      CS.address.toBech32 address Nothing
 
     renderSpinner :: ∀ w i. HH.HTML w i
     renderSpinner =
@@ -295,23 +295,23 @@ component =
 
           (Loaded wallet) -> do
             H.modify_ \state' -> set (_Loaded <<< _balance) Nothing state'
-            balance <- H.liftAff $ Csl.fromHex <$> CW.getBalance wallet.api 
+            balance <- H.liftAff $ CS.fromHex <$> CW.getBalance wallet.api 
             H.modify_ \state' -> set (_Loaded <<< _balance) balance state'
 
             H.modify_ \state' -> set (_Loaded <<< _changeAddress) Nothing state'
-            changeAddress <- H.liftAff $ Csl.fromHex <$> CW.getChangeAddress wallet.api
+            changeAddress <- H.liftAff $ CS.fromHex <$> CW.getChangeAddress wallet.api
             H.modify_ \state' -> set (_Loaded <<< _changeAddress) changeAddress state'
 
             H.modify_ \state' -> set (_Loaded <<< _rewardAddresses) Nothing state'
-            rewardAddresses <- liftAff $ traverse Csl.address.fromHex <$> CW.getRewardAddresses wallet.api
+            rewardAddresses <- liftAff $ traverse CS.address.fromHex <$> CW.getRewardAddresses wallet.api
             H.modify_ \state' -> set (_Loaded <<< _rewardAddresses) rewardAddresses state'
 
             H.modify_ \state' -> set (_Loaded <<< _usedAddresses) Nothing state'
-            usedAddresses <- liftAff $ traverse Csl.address.fromHex <$> CW.getUsedAddresses wallet.api { limit: 10, page: 0 }
+            usedAddresses <- liftAff $ traverse CS.address.fromHex <$> CW.getUsedAddresses wallet.api { limit: 10, page: 0 }
             H.modify_ \state' -> set (_Loaded <<< _usedAddresses) usedAddresses state'
 
             H.modify_ \state' -> set (_Loaded <<< _utxos) Nothing state' 
-            utxos <- liftAff $ traverse Csl.txUnspentOut.fromHex <$> CW.getUtxos wallet.api Nothing
+            utxos <- liftAff $ traverse CS.txUnspentOut.fromHex <$> CW.getUtxos wallet.api Nothing
             H.modify_ \state' -> set (_Loaded <<< _utxos) utxos state' 
 
           _ -> pure unit
@@ -321,19 +321,19 @@ component =
       Loaded wallet -> Just wallet
       _ -> Nothing
 
-    _balance :: Lens' Wallet (Maybe Csl.BigNum)
+    _balance :: Lens' Wallet (Maybe CS.BigNum)
     _balance = prop (Proxy :: Proxy "balance")
 
-    _changeAddress :: Lens' Wallet (Maybe Csl.Address)
+    _changeAddress :: Lens' Wallet (Maybe CS.Address)
     _changeAddress = prop (Proxy :: Proxy "changeAddress")
 
-    _rewardAddresses :: Lens' Wallet (Maybe (Array Csl.Address))
+    _rewardAddresses :: Lens' Wallet (Maybe (Array CS.Address))
     _rewardAddresses = prop (Proxy :: Proxy "rewardAddresses")
 
-    _usedAddresses :: Lens' Wallet (Maybe (Array Csl.Address))
+    _usedAddresses :: Lens' Wallet (Maybe (Array CS.Address))
     _usedAddresses = prop (Proxy :: Proxy "usedAddresses")
 
-    _utxos :: Lens' Wallet (Maybe (Array Csl.TxUnspentOut))
+    _utxos :: Lens' Wallet (Maybe (Array CS.TxUnspentOut))
     _utxos = prop (Proxy :: Proxy "utxos")
 
     handleQuery :: ∀ a. Query a -> H.HalogenM State Action () output m (Maybe a)

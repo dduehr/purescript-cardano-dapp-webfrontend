@@ -3,7 +3,7 @@ module Frontend.Component.HTML.SendAdaToAddress (component) where
 import Prelude
 
 import Control.Monad.State.Class (get)
-import Csl as Csl
+import Csl as CS
 import Data.Either (Either(..))
 import Data.Foldable (for_)
 import Data.Maybe (Maybe(..), fromMaybe, isNothing)
@@ -27,8 +27,8 @@ type Input = Unit
 
 type Form :: (Type -> Type -> Type -> Type) -> Row Type
 type Form f =
-  ( recipient :: f String FormError Csl.Address
-  , amount    :: f String FormError Csl.BigNum
+  ( recipient :: f String FormError CS.Address
+  , amount    :: f String FormError CS.BigNum
   )
 
 type FormContext = F.FormContext (Form F.FieldState) (Form (F.FieldAction Action)) Input Action

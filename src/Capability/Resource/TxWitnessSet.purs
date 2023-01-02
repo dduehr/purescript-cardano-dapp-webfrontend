@@ -2,9 +2,8 @@ module Frontend.Capability.Resource.TxWitnessSet where
 
 import Prelude
 
-import Csl (TxWitnessSet) as Csl
-import Data.Maybe (Maybe)
+import Csl (TxWitnessSet) as CS
 
 class Monad m <= ManageTxWitnessSet m where
-  fromHex :: String -> m (Maybe Csl.TxWitnessSet)
+  new :: m (CS.TxWitnessSet)
 

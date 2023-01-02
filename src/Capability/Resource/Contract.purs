@@ -3,29 +3,29 @@ module Frontend.Capability.Resource.Contract where
 import Prelude
 
 import Cardano.Wallet (Api) as CW
-import Csl (Address) as Csl
+import Csl (Address) as CS
 import Data.Maybe (Maybe)
 import Halogen (HalogenM, lift) as H
 
 import Frontend.Data.Transaction (TxId)
 
 type SendAdaToContractFields =
-  { contractAddress :: Csl.Address
+  { contractAddress :: CS.Address
   -- TBD ...
   }
 
 type SendTokenToContractFields =
-  { contractAddress :: Csl.Address
+  { contractAddress :: CS.Address
   -- TBD ...
   }
 
 type RedeemAdaFromContractFields =
-  { contractAddress :: Csl.Address
+  { contractAddress :: CS.Address
   -- TBD ...
   }
 
 type RedeemTokenFromContractFields =
-  { contractAddress :: Csl.Address
+  { contractAddress :: CS.Address
   -- TBD ...
   }
 

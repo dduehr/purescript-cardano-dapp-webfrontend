@@ -2,29 +2,30 @@ module Frontend.AppM where
 
 import Prelude
 
-import Cardano.Wallet (availableWallets, enable, getApiVersion, getChangeAddress, getIcon, getName, getUtxos, signTx, submitTx) as CW
+import Cardano.Wallet (availableWallets, enable, getApiVersion, getChangeAddress, getIcon, getName, getUtxos, isWalletAvailable, signTx, submitTx) as CW
 import Control.Monad.Maybe.Trans (MaybeT(..), runMaybeT)
 import Control.Monad.Trans.Class (lift)
-import Csl as Csl
+import Csl as CS
 import Data.Array (filter)
-import Data.Either (hush)
 import Data.Foldable (elem)
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
-import Data.Traversable (sequence, traverse)
+import Data.Traversable (for, sequence, traverse)
 import Effect.Aff (Aff, attempt)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
+import Effect.Class.Console (log)
 import Halogen as H
 import Halogen.Store.Monad (class MonadStore, StoreT, getStore, runStoreT)
 import Safe.Coerce (coerce)
 
 import Frontend.Api.WalletName (unwrap) as WalletName
+import Frontend.Capability.LogMessages (class LogMessages, logHush)
 import Frontend.Capability.Resource.Address (class ManageAddress) as Address
+import Frontend.Capability.Resource.AuxiliaryData (class ManageAuxiliaryData, new) as AuxiliaryData
 import Frontend.Capability.Resource.Contract (class ManageContract) as Contract
-import Frontend.Capability.Resource.TxBody (class ManageTxBody, toSignedHex, toUnsignedHex) as TxBody
 import Frontend.Capability.Resource.TxBuilder (class ManageTxBuilder, addChangeIfNedded, addInsFrom, addOut, build, new) as TxBuilder
-import Frontend.Capability.Resource.TxWitnessSet (class ManageTxWitnessSet, fromHex) as TxWitnessSet
+import Frontend.Capability.Resource.TxWitnessSet (class ManageTxWitnessSet, new) as TxWitnessSet
 import Frontend.Capability.Resource.Wallet (class ManageWallet, getChangeAddress, getTxUnspentOuts, signTx, submitTx) as Wallet
 import Frontend.Capability.Resource.WebPage (class ManageWebPage, getWallet) as WebPage
 import Frontend.Store as Store
@@ -43,82 +44,83 @@ derive newtype instance monadEffectAppM :: MonadEffect AppM
 derive newtype instance monadAffAppM :: MonadAff AppM
 derive newtype instance monadStoreAppM :: MonadStore Store.Action Store.Store AppM
 
+instance logMessagesAppM :: LogMessages AppM where
+  logMessage = log
+
 instance manageWebPageAppM :: WebPage.ManageWebPage AppM where
   getWallet walletName =
-    let
-      mkWallet wn = do
-        apiVersion <- CW.getApiVersion wn
-        name <- CW.getName wn
-        icon <- CW.getIcon wn
-        pure $ Just
-          { id: wn
-          , name: name
-          , apiVersion: apiVersion
-          , icon: icon
-          }
-    in
-      liftEffect $ mkWallet walletName  
+    liftEffect $ do
+      isWalletAvailable <- CW.isWalletAvailable walletName
+      if isWalletAvailable
+        then do
+          apiVersion <- CW.getApiVersion walletName
+          name <- CW.getName walletName
+          icon <- CW.getIcon walletName
+          pure $ Just
+            { id: walletName
+            , name: name
+            , apiVersion: apiVersion
+            , icon: icon
+            }
+        else
+          pure Nothing
 
   availableWallets = do
-      walletNames <- liftEffect $ CW.availableWallets
-      blacklist <- _.blacklist <$> getStore
-      sequence <$> (traverse WebPage.getWallet $ filter (\walletName -> WalletName.unwrap walletName `not elem` blacklist) walletNames)
+    walletNames <- liftEffect $ CW.availableWallets
+    blacklist <- _.blacklist <$> getStore
+    sequence <$> (traverse WebPage.getWallet $ filter (\walletName -> WalletName.unwrap walletName `not elem` blacklist) walletNames)
 
 
 instance manageWalletAppM :: Wallet.ManageWallet AppM where
-  enableWallet walletName = 
-    hush <$> liftAff (attempt $ CW.enable walletName)
+  enableWallet walletName = do
+    logHush $ liftAff (attempt $ CW.enable walletName)
 
   getTxUnspentOuts walletApi = do
-    mbArrayCbor <- hush <$> liftAff (attempt $ CW.getUtxos walletApi Nothing)
-    let mbArrayUtxo = mbArrayCbor >>= traverse Csl.txUnspentOut.fromHex
-    liftEffect $ traverse Csl.toMutableList mbArrayUtxo  
+    mbArrayCbor <- logHush $ liftAff (attempt $ CW.getUtxos walletApi Nothing)
+    let mbArrayUtxo = traverse CS.txUnspentOut.fromHex =<< mbArrayCbor
+    liftEffect $ for mbArrayUtxo CS.toMutableList 
 
   getChangeAddress walletApi = do
-    mbCbor <- hush <$> liftAff (attempt $ CW.getChangeAddress walletApi)
-    pure $ mbCbor >>= Csl.address.fromHex
+    mbCbor <- logHush $ liftAff (attempt $ CW.getChangeAddress walletApi)
+    pure $ CS.address.fromHex =<< mbCbor
 
-  signTx walletApi txBody = runMaybeT $ do
-    txUnsignedHex <- lift $ TxBody.toUnsignedHex txBody
-    txWitnessSetHex <- MaybeT $ hush <$> liftAff (attempt $ CW.signTx walletApi txUnsignedHex false)
-    MaybeT $ TxWitnessSet.fromHex txWitnessSetHex
+  signTx walletApi tx = do
+    let cbor = CS.tx.toHex tx
+    mbTxWitnessSetHex <- logHush $ liftAff (attempt $ CW.signTx walletApi cbor false)
+    pure $ CS.txWitnessSet.fromHex =<< mbTxWitnessSetHex
 
-  submitTx walletApi txBody txWitnessSet = runMaybeT $ do
-    txSignedHex <- lift $ TxBody.toSignedHex txBody txWitnessSet
-    MaybeT $ hush <$> liftAff (attempt $ CW.submitTx walletApi txSignedHex)
+  submitTx walletApi tx = do
+    let cbor = CS.tx.toHex tx
+    logHush $ liftAff (attempt $ CW.submitTx walletApi cbor)
+
 
 instance manageTxBuilderAppM :: TxBuilder.ManageTxBuilder AppM where
   new = do
     mbTxBuilderConfig <- _.txBuilderConfig <$> getStore
-    liftEffect $ traverse Csl.txBuilder.new mbTxBuilderConfig
+    liftEffect $ for mbTxBuilderConfig CS.txBuilder.new
 
   addOut txBuilder recipientAddress lovelaceAmount = do
-    let txOut = Csl.txOut.new recipientAddress $ Csl.value.new lovelaceAmount
-    liftEffect $ Csl.txBuilder.addOut txBuilder txOut
+    let txOut = CS.txOut.new recipientAddress $ CS.value.new lovelaceAmount
+    liftEffect $ CS.txBuilder.addOut txBuilder txOut
 
   addInsFrom txBuilder txUnspentOuts =
-    liftEffect $ Csl.txBuilder.addInsFrom txBuilder txUnspentOuts $ toNumber 1
+    liftEffect $ CS.txBuilder.addInsFrom txBuilder txUnspentOuts (toNumber 1)
 
   addChangeIfNedded txBuilder changeAddress =
-    liftEffect $ Csl.txBuilder.addChangeIfNeeded txBuilder changeAddress 
+    liftEffect $ CS.txBuilder.addChangeIfNeeded txBuilder changeAddress 
 
   build txBuilder =
-    liftEffect $ Csl.txBuilder.build txBuilder
+    liftEffect $ CS.txBuilder.build txBuilder
 
 
-instance manageTxBodyAppM :: TxBody.ManageTxBody AppM where
-  toUnsignedHex txBody = do
-    txWitnessSetEmpty <- liftEffect $ Csl.txWitnessSet.new
-    auxiliaryDataEmpty <- liftEffect $ Csl.auxiliaryData.new
-    pure $ Csl.tx.toHex $ Csl.tx.new txBody txWitnessSetEmpty auxiliaryDataEmpty
-
-  toSignedHex txBody txWitnessSet = do
-    auxiliaryDataEmpty <- liftEffect $ Csl.auxiliaryData.new
-    pure $ Csl.tx.toHex $ Csl.tx.new txBody txWitnessSet auxiliaryDataEmpty
+instance manageTxWitnessSetAppM :: TxWitnessSet.ManageTxWitnessSet AppM where
+  new =
+    liftEffect CS.txWitnessSet.new
 
 
-instance manageTxWitnessSet :: TxWitnessSet.ManageTxWitnessSet AppM where
-  fromHex = pure <<< Csl.txWitnessSet.fromHex
+instance manageAuxiliaryDataAppM :: AuxiliaryData.ManageAuxiliaryData AppM where
+  new =
+    liftEffect CS.auxiliaryData.new
 
 
 instance manageAddressAppM :: Address.ManageAddress AppM where
@@ -132,10 +134,15 @@ instance manageAddressAppM :: Address.ManageAddress AppM where
     if changeAdded
       then do
         txBody <- lift $ TxBuilder.build txBuilder
-        txWitnessSet <- MaybeT $ Wallet.signTx walletApi txBody
-        MaybeT $ Wallet.submitTx walletApi txBody txWitnessSet
+        txWitnessSetEmpty <- lift $ TxWitnessSet.new
+        auxiliaryDataEmpty <- lift $ AuxiliaryData.new
+        let txUnsigned = CS.tx.new txBody txWitnessSetEmpty auxiliaryDataEmpty
+        txWitnessSetSigned <- MaybeT $ Wallet.signTx walletApi txUnsigned
+        let txSigned = CS.tx.new txBody txWitnessSetSigned auxiliaryDataEmpty
+        MaybeT $ Wallet.submitTx walletApi txSigned
       else
         MaybeT $ pure Nothing
+
 
   sendTokenToAddress _ _ = do
     pure $ Nothing

@@ -2,7 +2,7 @@ module Main (main) where
 
 import Prelude
 
-import Csl (TxBuilderConfig, bigNum, linearFee, txBuilderConfigBuilder) as Csl
+import Csl (TxBuilderConfig, bigNum, linearFee, txBuilderConfigBuilder) as CS
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Halogen.Aff as HA
@@ -22,19 +22,19 @@ main = HA.runHalogenAff do
     blacklist :: Array String
     blacklist = [ "ccvault" ]  
 
-    txBuilderConfig :: Maybe Csl.TxBuilderConfig
+    txBuilderConfig :: Maybe CS.TxBuilderConfig
     txBuilderConfig = do
-      feeCoefficient <- Csl.bigNum.fromStr "44"
-      feeConstant <- Csl.bigNum.fromStr "155381"
-      poolDeposit <- Csl.bigNum.fromStr "500000000"
-      keyDeposit <- Csl.bigNum.fromStr "2000000"
-      coinsPerUtxoWord <- Csl.bigNum.fromStr "34482"
-      pure $ Csl.txBuilderConfigBuilder.build
-        $ flip Csl.txBuilderConfigBuilder.preferPureChange true
-        $ flip Csl.txBuilderConfigBuilder.maxTxSize 16384
-        $ flip Csl.txBuilderConfigBuilder.maxValueSize 5000
-        $ flip Csl.txBuilderConfigBuilder.coinsPerUtxoWord coinsPerUtxoWord
-        $ flip Csl.txBuilderConfigBuilder.keyDeposit keyDeposit
-        $ flip Csl.txBuilderConfigBuilder.poolDeposit poolDeposit
-        $ flip Csl.txBuilderConfigBuilder.feeAlgo (Csl.linearFee.new feeCoefficient feeConstant)
-        $ Csl.txBuilderConfigBuilder.new   
+      feeCoefficient <- CS.bigNum.fromStr "44"
+      feeConstant <- CS.bigNum.fromStr "155381"
+      poolDeposit <- CS.bigNum.fromStr "500000000"
+      keyDeposit <- CS.bigNum.fromStr "2000000"
+      coinsPerUtxoWord <- CS.bigNum.fromStr "34482"
+      pure $ CS.txBuilderConfigBuilder.build
+        $ flip CS.txBuilderConfigBuilder.preferPureChange true
+        $ flip CS.txBuilderConfigBuilder.maxTxSize 16384
+        $ flip CS.txBuilderConfigBuilder.maxValueSize 5000
+        $ flip CS.txBuilderConfigBuilder.coinsPerUtxoWord coinsPerUtxoWord
+        $ flip CS.txBuilderConfigBuilder.keyDeposit keyDeposit
+        $ flip CS.txBuilderConfigBuilder.poolDeposit poolDeposit
+        $ flip CS.txBuilderConfigBuilder.feeAlgo (CS.linearFee.new feeCoefficient feeConstant)
+        $ CS.txBuilderConfigBuilder.new   

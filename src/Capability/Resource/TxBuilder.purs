@@ -2,12 +2,12 @@ module Frontend.Capability.Resource.TxBuilder where
 
 import Prelude
 
-import Csl (Address, BigNum, TxBody, TxBuilder, TxUnspentOuts) as Csl
+import Csl (Address, BigNum, TxBody, TxBuilder, TxUnspentOuts) as CS
 import Data.Maybe (Maybe)
 
 class Monad m <= ManageTxBuilder m where
-  new :: m (Maybe Csl.TxBuilder)
-  addOut :: Csl.TxBuilder -> Csl.Address -> Csl.BigNum -> m Unit
-  addInsFrom ::Csl.TxBuilder -> Csl.TxUnspentOuts -> m Unit
-  addChangeIfNedded :: Csl.TxBuilder -> Csl.Address -> m Boolean
-  build :: Csl.TxBuilder -> m Csl.TxBody
+  new :: m (Maybe CS.TxBuilder)
+  addOut :: CS.TxBuilder -> CS.Address -> CS.BigNum -> m Unit
+  addInsFrom ::CS.TxBuilder -> CS.TxUnspentOuts -> m Unit
+  addChangeIfNedded :: CS.TxBuilder -> CS.Address -> m Boolean
+  build :: CS.TxBuilder -> m CS.TxBody

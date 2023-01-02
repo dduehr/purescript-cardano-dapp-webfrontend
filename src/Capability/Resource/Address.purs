@@ -3,18 +3,18 @@ module Frontend.Capability.Resource.Address where
 import Prelude
 
 import Cardano.Wallet (Api) as CW
-import Csl (Address, BigNum) as Csl
+import Csl (Address, BigNum) as CS
 import Data.Maybe (Maybe)
 import Frontend.Data.Transaction (TxId)
 import Halogen (HalogenM, lift) as H
 
 type SendAdaToAddressFields =
-  { recipientAddress :: Csl.Address
-  , lovelaceAmount   :: Csl.BigNum
+  { recipientAddress :: CS.Address
+  , lovelaceAmount   :: CS.BigNum
   }
 
 type SendTokenToAddressFields = 
-  { recipientAddress :: Csl.Address
+  { recipientAddress :: CS.Address
   -- TBD ...
   }
 
