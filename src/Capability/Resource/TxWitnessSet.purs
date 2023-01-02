@@ -1,4 +1,4 @@
-module Example.Capability.Resource.TxWitnessSet where
+module Frontend.Capability.Resource.TxWitnessSet where
 
 import Prelude
 

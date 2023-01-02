@@ -1,4 +1,4 @@
-module Example.Page.Root (component) where
+module Frontend.Page.Root (component) where
 
 import Prelude
 
@@ -10,15 +10,15 @@ import Halogen.HTML.Properties as HP
 import Halogen.Store.Monad (class MonadStore)
 import Type.Proxy (Proxy(..))
 
-import Example.Capability.Resource.Address (class ManageAddress)
-import Example.Capability.Resource.Contract (class ManageContract)
-import Example.Capability.Resource.Wallet (class ManageWallet)
-import Example.Capability.Resource.WebPage (class ManageWebPage)
-import Example.Component.HTML.Utils (css)
-import Example.Component.HTML.WalletActions (component) as WalletActions
-import Example.Component.HTML.WalletView (component, Query(..)) as WalletView
-import Example.Component.HTML.WalletsDropDown (component, Message(..)) as WalletsDropDown
-import Example.Store (Action, Store) as Store
+import Frontend.Capability.Resource.Address (class ManageAddress)
+import Frontend.Capability.Resource.Contract (class ManageContract)
+import Frontend.Capability.Resource.Wallet (class ManageWallet)
+import Frontend.Capability.Resource.WebPage (class ManageWebPage)
+import Frontend.Component.HTML.Utils (css)
+import Frontend.Component.HTML.WalletActions (component) as WalletActions
+import Frontend.Component.HTML.WalletView (component, Query(..)) as WalletView
+import Frontend.Component.HTML.WalletsDropDown (component, Message(..)) as WalletsDropDown
+import Frontend.Store (Action, Store) as Store
 
 data Action
   = HandleWalletsDropDown WalletsDropDown.Message 
@@ -63,7 +63,7 @@ component =
             , HH.div [ css "navbar-menu" ]
                 [ HH.div [ css "navbar-start" ]
                     [ HH.div [ css "navbar-item title is-5" ]
-                      [ HH.text "Cardano DApp Connection Example" ]
+                      [ HH.text "Cardano Frontend Connection Frontend" ]
                     ]
                 , HH.div [ css "navbar-end" ]
                     [ HH.slot (Proxy :: _ "walletsDropDown") unit WalletsDropDown.component unit HandleWalletsDropDown ]

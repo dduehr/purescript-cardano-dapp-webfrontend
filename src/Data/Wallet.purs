@@ -1,4 +1,4 @@
-module Example.Data.Wallet where
+module Frontend.Data.Wallet where
 
 import Cardano.Wallet (WalletName) as CW
 

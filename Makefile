@@ -12,7 +12,7 @@ build:
 	spago build 
 
 clean:
-	rm -r output/Example.*
+	rm -r output/Frontend.*
 	rm -r output/Main/ 		
 
 test:

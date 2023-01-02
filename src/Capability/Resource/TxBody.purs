@@ -1,4 +1,4 @@
-module Example.Capability.Resource.TxBody where
+module Frontend.Capability.Resource.TxBody where
 
 import Prelude
 

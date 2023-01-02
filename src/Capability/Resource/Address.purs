@@ -1,11 +1,11 @@
-module Example.Capability.Resource.Address where
+module Frontend.Capability.Resource.Address where
 
 import Prelude
 
 import Cardano.Wallet (Api) as CW
 import Csl (Address, BigNum) as Csl
 import Data.Maybe (Maybe)
-import Example.Data.Transaction (TxId)
+import Frontend.Data.Transaction (TxId)
 import Halogen (HalogenM, lift) as H
 
 type SendAdaToAddressFields =

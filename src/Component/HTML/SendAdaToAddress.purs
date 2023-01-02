@@ -1,4 +1,4 @@
-module Example.Component.HTML.SendAdaToAddress (component) where
+module Frontend.Component.HTML.SendAdaToAddress (component) where
 
 import Prelude
 
@@ -18,10 +18,10 @@ import Halogen.Store.Connect (Connected, connect)
 import Halogen.Store.Monad (class MonadStore)
 import Halogen.Store.Select (selectAll)
 
-import Example.Capability.Resource.Address (class ManageAddress, sendAdaToAddress)
-import Example.Component.HTML.Utils (css)
-import Example.Form.Validation (FormError, bech32Format, bigNumFormat)
-import Example.Store as Store
+import Frontend.Capability.Resource.Address (class ManageAddress, sendAdaToAddress)
+import Frontend.Component.HTML.Utils (css)
+import Frontend.Form.Validation (FormError, bech32Format, bigNumFormat)
+import Frontend.Store as Store
 
 type Input = Unit
 

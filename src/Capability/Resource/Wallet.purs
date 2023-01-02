@@ -1,4 +1,4 @@
-module Example.Capability.Resource.Wallet where
+module Frontend.Capability.Resource.Wallet where
 
 import Prelude
 
@@ -7,7 +7,7 @@ import Csl as Csl
 import Data.Maybe (Maybe)
 import Halogen (HalogenM, lift) as H
 
-import Example.Data.Transaction (TxId)
+import Frontend.Data.Transaction (TxId)
 
 class Monad m <= ManageWallet m where
   enableWallet :: CW.WalletName -> m (Maybe CW.Api)

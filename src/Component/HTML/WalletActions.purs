@@ -1,4 +1,4 @@
-module Example.Component.HTML.WalletActions where
+module Frontend.Component.HTML.WalletActions where
 
 import Prelude
 
@@ -16,17 +16,17 @@ import Halogen.HTML.Events as HE
 import Halogen.Store.Monad (class MonadStore)
 import Type.Proxy (Proxy(..))
 
-import Example.Capability.Resource.Address (class ManageAddress)
-import Example.Capability.Resource.Contract (class ManageContract)
-import Example.Capability.Resource.WebPage (class ManageWebPage)
-import Example.Component.HTML.RedeemAdaFromContract (component) as RedeemAdaFromContract 
-import Example.Component.HTML.RedeemTokenFromContract (component) as RedeemTokenFromContract 
-import Example.Component.HTML.SendAdaToAddress (component) as SendAdaToAddress 
-import Example.Component.HTML.SendAdaToContract (component) as SendAdaToContract 
-import Example.Component.HTML.SendTokenToAddress (component) as SendTokenToAddress 
-import Example.Component.HTML.SendTokenToContract (component) as SendTokenToContract
-import Example.Component.HTML.Utils (css)
-import Example.Store as Store
+import Frontend.Capability.Resource.Address (class ManageAddress)
+import Frontend.Capability.Resource.Contract (class ManageContract)
+import Frontend.Capability.Resource.WebPage (class ManageWebPage)
+import Frontend.Component.HTML.RedeemAdaFromContract (component) as RedeemAdaFromContract 
+import Frontend.Component.HTML.RedeemTokenFromContract (component) as RedeemTokenFromContract 
+import Frontend.Component.HTML.SendAdaToAddress (component) as SendAdaToAddress 
+import Frontend.Component.HTML.SendAdaToContract (component) as SendAdaToContract 
+import Frontend.Component.HTML.SendTokenToAddress (component) as SendTokenToAddress 
+import Frontend.Component.HTML.SendTokenToContract (component) as SendTokenToContract
+import Frontend.Component.HTML.Utils (css)
+import Frontend.Store as Store
 
 data State 
   = Selected MenuItem

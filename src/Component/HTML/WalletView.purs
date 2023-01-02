@@ -1,4 +1,4 @@
-module Example.Component.HTML.WalletView
+module Frontend.Component.HTML.WalletView
   ( component
   , Query(..)
   ) where
@@ -23,9 +23,9 @@ import Halogen.Store.Monad (class MonadStore)
 import Halogen.Store.Select (Selector, select)
 import Type.Proxy (Proxy(..))
 
-import Example.Api.WalletName (unwrap) as WalletName
-import Example.Component.HTML.Utils (css)
-import Example.Store (Action, Store, Wallet) as Store
+import Frontend.Api.WalletName (unwrap) as WalletName
+import Frontend.Component.HTML.Utils (css)
+import Frontend.Store (Action, Store, Wallet) as Store
 
 type Input = Unit
 

@@ -1,3 +1,3 @@
-module Example.Data.Transaction where
+module Frontend.Data.Transaction where
 
 type TxId = String

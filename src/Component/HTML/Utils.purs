@@ -1,4 +1,4 @@
-module Example.Component.HTML.Utils where
+module Frontend.Component.HTML.Utils where
 
 import Prelude
 

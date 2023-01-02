@@ -1,4 +1,4 @@
-module Example.Store where
+module Frontend.Store where
 
 import Cardano.Wallet (Api, WalletName) as CW
 import Csl (TxBuilderConfig) as Csl

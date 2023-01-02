@@ -1,4 +1,4 @@
-module Example.Form.Validation where
+module Frontend.Form.Validation where
 
 import Prelude
 

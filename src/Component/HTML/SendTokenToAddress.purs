@@ -1,4 +1,4 @@
-module Example.Component.HTML.SendTokenToAddress (component) where
+module Frontend.Component.HTML.SendTokenToAddress (component) where
 
 import Prelude (Unit, ($), (<<<))
 
@@ -9,8 +9,8 @@ import Halogen.Store.Connect (Connected, connect)
 import Halogen.Store.Monad (class MonadStore)
 import Halogen.Store.Select (selectAll)
 
-import Example.Capability.Resource.Address (class ManageAddress)
-import Example.Store (Action, Store) as Store
+import Frontend.Capability.Resource.Address (class ManageAddress)
+import Frontend.Store (Action, Store) as Store
 
 type Input = Unit
 

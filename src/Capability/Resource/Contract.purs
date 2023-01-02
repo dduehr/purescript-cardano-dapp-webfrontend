@@ -1,12 +1,13 @@
-module Example.Capability.Resource.Contract where
+module Frontend.Capability.Resource.Contract where
 
 import Prelude
 
 import Cardano.Wallet (Api) as CW
 import Csl (Address) as Csl
 import Data.Maybe (Maybe)
-import Example.Data.Transaction (TxId)
 import Halogen (HalogenM, lift) as H
+
+import Frontend.Data.Transaction (TxId)
 
 type SendAdaToContractFields =
   { contractAddress :: Csl.Address
