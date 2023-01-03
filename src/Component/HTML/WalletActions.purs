@@ -5,7 +5,7 @@ import Prelude
 import Data.Bounded.Generic (genericBottom)
 import Data.Enum.Generic (genericSucc)
 import Data.Generic.Rep (class Generic)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), maybe)
 import Data.Show.Generic (genericShow)
 import Data.Tuple (Tuple(..))
 import Data.Unfoldable (unfoldr)
@@ -19,6 +19,7 @@ import Type.Proxy (Proxy(..))
 import Frontend.Capability.Resource.Address (class ManageAddress)
 import Frontend.Capability.Resource.Contract (class ManageContract)
 import Frontend.Capability.Resource.WebPage (class ManageWebPage)
+import Frontend.Component.HTML.Modal (Query(..), component) as Modal
 import Frontend.Component.HTML.RedeemAdaFromContract (component) as RedeemAdaFromContract 
 import Frontend.Component.HTML.RedeemTokenFromContract (component) as RedeemTokenFromContract 
 import Frontend.Component.HTML.SendAdaToAddress (component) as SendAdaToAddress 
@@ -26,6 +27,8 @@ import Frontend.Component.HTML.SendAdaToContract (component) as SendAdaToContrac
 import Frontend.Component.HTML.SendTokenToAddress (component) as SendTokenToAddress 
 import Frontend.Component.HTML.SendTokenToContract (component) as SendTokenToContract
 import Frontend.Component.HTML.Utils (css)
+import Frontend.Data.Tx (TxId)
+import Frontend.Data.Result (Result(..))
 import Frontend.Store as Store
 
 data State 
@@ -46,14 +49,16 @@ instance Show MenuItem where
 
 data Action 
   = Select MenuItem
+  | HandleResult (Maybe TxId)
 
 type Slots =
-  ( sendAdaToAddress :: ∀ query. H.Slot query Void Unit
-  , sendTokenToAddress :: ∀ query. H.Slot query Void Unit
-  , sendAdaToContract :: ∀ query. H.Slot query Void Unit
-  , sendTokenToContract :: ∀ query. H.Slot query Void Unit
-  , redeemAdaFromContract :: ∀ query. H.Slot query Void Unit
-  , redeemTokenFromContract :: ∀ query. H.Slot query Void Unit
+  ( sendAdaToAddress :: ∀ query. H.Slot query (Maybe TxId) Unit
+  , sendTokenToAddress :: ∀ query. H.Slot query (Maybe TxId) Unit
+  , sendAdaToContract :: ∀ query. H.Slot query (Maybe TxId) Unit
+  , sendTokenToContract :: ∀ query. H.Slot query (Maybe TxId) Unit
+  , redeemAdaFromContract :: ∀ query. H.Slot query (Maybe TxId) Unit
+  , redeemTokenFromContract :: ∀ query. H.Slot query (Maybe TxId) Unit
+  , modal :: H.Slot Modal.Query Void Unit
   )
 
 component
@@ -93,6 +98,7 @@ component =
             ]
         , HH.div_
             ( renderMenuContent selected <$> menuItems )
+        , HH.slot_ (Proxy :: _ "modal") unit Modal.component unit 
         ]
 
     renderMenuLabel :: MenuItem -> MenuItem -> H.ComponentHTML Action Slots m
@@ -137,7 +143,7 @@ component =
     menuLabel RedeemTokenFromContract = "Redeem Token from Smart Contract"
 
     menuContent :: MenuItem -> H.ComponentHTML Action Slots m
-    menuContent SendAdaToAddress        = HH.slot_ (Proxy :: _ "sendAdaToAddress") unit SendAdaToAddress.component unit
+    menuContent SendAdaToAddress        = HH.slot  (Proxy :: _ "sendAdaToAddress") unit SendAdaToAddress.component unit HandleResult
     menuContent SendTokenToAddress      = HH.slot_ (Proxy :: _ "sendTokenToAddress") unit SendTokenToAddress.component unit 
     menuContent SendAdaToContract       = HH.slot_ (Proxy :: _ "sendAdaToContract") unit SendAdaToContract.component unit
     menuContent SendTokenToContract     = HH.slot_ (Proxy :: _ "sendTokenToContract") unit SendTokenToContract.component unit
@@ -148,3 +154,5 @@ component =
     handleAction = case _ of
       Select menuItem ->
         H.put $ Selected menuItem
+      HandleResult result ->
+        H.tell (Proxy :: _ "modal") unit (Modal.Show $ maybe Failure Success result)

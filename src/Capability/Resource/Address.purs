@@ -5,7 +5,7 @@ import Prelude
 import Cardano.Wallet (Api) as CW
 import Csl (Address, BigNum) as CS
 import Data.Maybe (Maybe)
-import Frontend.Data.Transaction (TxId)
+import Frontend.Data.Tx (TxId)
 import Halogen (HalogenM, lift) as H
 
 type SendAdaToAddressFields =

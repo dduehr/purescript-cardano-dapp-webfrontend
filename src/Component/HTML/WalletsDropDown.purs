@@ -82,7 +82,7 @@ component =
     render (Just { wallets, selected: Nothing }) =
         HH.div [ css "navbar-item has-dropdown is-hoverable" ]
           [ HH.div [ css "navbar-link" ]
-              [ HH.text "Connect wallet ..."]
+              [ HH.text "Wallets"]
           , HH.div [ css "navbar-dropdown is-right" ]
               ( renderDropDownItem <$> wallets )
           ]

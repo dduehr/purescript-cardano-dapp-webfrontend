@@ -63,7 +63,7 @@ component =
             , HH.div [ css "navbar-menu" ]
                 [ HH.div [ css "navbar-start" ]
                     [ HH.div [ css "navbar-item title is-5" ]
-                      [ HH.text "Cardano Frontend Connection Frontend" ]
+                      [ HH.text "Cardano DApp Web-Frontend" ]
                     ]
                 , HH.div [ css "navbar-end" ]
                     [ HH.slot (Proxy :: _ "walletsDropDown") unit WalletsDropDown.component unit HandleWalletsDropDown ]

@@ -6,9 +6,8 @@ import Control.Monad.State.Class (get)
 import Csl as CS
 import Data.Either (Either(..))
 import Data.Foldable (for_)
-import Data.Maybe (Maybe(..), fromMaybe, isNothing)
+import Data.Maybe (Maybe(..), isNothing)
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class.Console (log)
 import Formless as F
 import Halogen as H
 import Halogen.HTML as HH
@@ -20,10 +19,13 @@ import Halogen.Store.Select (selectAll)
 
 import Frontend.Capability.Resource.Address (class ManageAddress, sendAdaToAddress)
 import Frontend.Component.HTML.Utils (css)
+import Frontend.Data.Tx (TxId)
 import Frontend.Form.Validation (FormError, bech32Format, bigNumFormat)
 import Frontend.Store as Store
 
 type Input = Unit
+
+type Output = Maybe TxId
 
 type Form :: (Type -> Type -> Type -> Type) -> Row Type
 type Form f =
@@ -44,11 +46,11 @@ type State =
   }
 
 component
-  :: ∀ query output m
+  :: ∀ query m
    . MonadAff m
   => MonadStore Store.Action Store.Store m
   => ManageAddress m
-  => H.Component query Input output m
+  => H.Component query Input Output m
 component =
   F.formless { liftAction: Eval } mempty $ connect selectAll $ H.mkComponent
     { initialState: deriveState
@@ -83,8 +85,11 @@ component =
     onSubmit fields = do
       { store } <- get
       for_ store.wallet \wallet -> do
-        mbTxId <- sendAdaToAddress wallet.api { recipientAddress: fields.recipient, lovelaceAmount: fields.amount }
-        log $ "sendAdaToAddress: " <> fromMaybe "failed" mbTxId 
+        mbTxId <- sendAdaToAddress wallet.api
+          { recipientAddress: fields.recipient
+          , lovelaceAmount: fields.amount
+          }
+        F.raise mbTxId
       pure unit  
 
     render :: State -> H.ComponentHTML Action () m

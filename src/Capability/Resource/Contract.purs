@@ -7,7 +7,7 @@ import Csl (Address) as CS
 import Data.Maybe (Maybe)
 import Halogen (HalogenM, lift) as H
 
-import Frontend.Data.Transaction (TxId)
+import Frontend.Data.Tx (TxId)
 
 type SendAdaToContractFields =
   { contractAddress :: CS.Address

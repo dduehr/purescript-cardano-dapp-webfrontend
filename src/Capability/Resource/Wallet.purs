@@ -7,7 +7,7 @@ import Csl as CS
 import Data.Maybe (Maybe)
 import Halogen (HalogenM, lift) as H
 
-import Frontend.Data.Transaction (TxId)
+import Frontend.Data.Tx (TxId)
 
 class Monad m <= ManageWallet m where
   enableWallet :: CW.WalletName -> m (Maybe CW.Api)

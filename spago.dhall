@@ -30,6 +30,7 @@ to generate this file without the comments in this block.
   , "purescript-cardano-serialization-lib"
   , "purescript-cip30"
   , "safe-coerce"
+  , "strings"
   , "transformers"
   , "tuples"
   , "unfoldable"
