@@ -105,7 +105,6 @@ let upstream =
       https://github.com/purescript/package-sets/releases/download/psc-0.15.0-20220504/packages.dhall
         sha256:fd37736ecaa24491c907af6a6422156417f21fbf25763de19f65bd641e8340d3
 in  upstream
-{-
   with purescript-cip30 =
       { dependencies = 
           [ "console"
@@ -120,10 +119,9 @@ in  upstream
       , repo =
           "https://github.com/anton-k/purescript-cip30.git"
       , version =
-          "841c8f83645a833e0ce4d5853a8288b296f7c101"
+          "227f349fdd91bd1b7c7521fa695dd806d11d1381"
       }
--}
-  with purescript-cip30 = ../purescript-cip30/spago.dhall as Location
+  {- with purescript-cip30 = ../purescript-cip30/spago.dhall as Location --}
   with purescript-cardano-serialization-lib =
       { dependencies = 
           [ "arraybuffer-types"
