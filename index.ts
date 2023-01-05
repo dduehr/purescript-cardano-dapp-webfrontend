@@ -1,4 +1,4 @@
-import * as Purs from './purs.js'
+import * as Purs from './bundle/purs.js'
 
 (async () => { 
     Purs.main();

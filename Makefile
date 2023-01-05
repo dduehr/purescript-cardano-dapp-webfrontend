@@ -13,7 +13,9 @@ build:
 
 clean:
 	rm -r output/Frontend.*
-	rm -r output/Main/ 		
+	rm -r output/Main/
+	rm -r bundle/
+	rm -r dist/ 		
 
 test:
 	echo "TODO: implement purs tests"
