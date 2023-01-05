@@ -22,10 +22,13 @@ const config = {
         asyncWebAssembly: true
     },
     stats: {
-        warningsFilter: [
-            './node_modules/@emurgo/cardano-serialization-lib-browser/cardano_serialization_lib_bg.js'
-        ]
-    }
+        errorDetails: true,
+    },
+    ignoreWarnings: [
+        {
+            module: /@emurgo\/cardano-serialization-lib-browser\/cardano_serialization_lib_bg\.js/
+        }
+    ]
 };
 
 module.exports = () => {
