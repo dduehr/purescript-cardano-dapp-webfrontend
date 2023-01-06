@@ -19,7 +19,7 @@ import Type.Proxy (Proxy(..))
 import Frontend.Capability.Resource.Address (class ManageAddress)
 import Frontend.Capability.Resource.Contract (class ManageContract)
 import Frontend.Capability.Resource.WebPage (class ManageWebPage)
-import Frontend.Component.HTML.Modal (Query(..), component) as Modal
+import Frontend.Component.HTML.ModalResult (Query(..), component) as ModalResult
 import Frontend.Component.HTML.RedeemAdaFromContract (component) as RedeemAdaFromContract
 import Frontend.Component.HTML.RedeemTokenFromContract (component) as RedeemTokenFromContract
 import Frontend.Component.HTML.SendAdaToAddress (component) as SendAdaToAddress
@@ -57,7 +57,7 @@ type Slots =
   , sendTokenToContract :: ∀ query. H.Slot query (Maybe TxId) Unit
   , redeemAdaFromContract :: ∀ query. H.Slot query (Maybe TxId) Unit
   , redeemTokenFromContract :: ∀ query. H.Slot query (Maybe TxId) Unit
-  , modal :: H.Slot Modal.Query Void Unit
+  , modalResult :: H.Slot ModalResult.Query Void Unit
   )
 
 component
@@ -97,7 +97,7 @@ component =
           ]
       , HH.div_
           (renderMenuContent selected <$> menuItems)
-      , HH.slot_ (Proxy :: _ "modal") unit Modal.component unit
+      , HH.slot_ (Proxy :: _ "modalResult") unit ModalResult.component unit
       ]
 
   renderMenuLabel :: MenuItem -> MenuItem -> H.ComponentHTML Action Slots m
@@ -151,4 +151,4 @@ component =
     Select menuItem ->
       H.put $ Selected menuItem
     HandleResult result ->
-      H.tell (Proxy :: _ "modal") unit (Modal.Show $ maybe Failure Success result)
+      H.tell (Proxy :: _ "modalResult") unit (ModalResult.Show $ maybe Failure Success result)

@@ -1,4 +1,4 @@
-module Frontend.Component.HTML.Modal (Query(..), component) where
+module Frontend.Component.HTML.ModalResult (Query(..), component) where
 
 import Prelude
 
