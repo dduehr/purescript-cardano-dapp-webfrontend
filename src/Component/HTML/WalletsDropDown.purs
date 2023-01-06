@@ -1,4 +1,4 @@
-module Frontend.Component.HTML.WalletsDropDown 
+module Frontend.Component.HTML.WalletsDropDown
   ( component
   , Message(..)
   ) where
@@ -26,7 +26,7 @@ import Frontend.Store (Action(..), Store) as Store
 
 type State = Maybe Choice
 
-type Choice = 
+type Choice =
   { wallets :: Array Wallet
   , selected :: Maybe Wallet
   }
@@ -39,16 +39,15 @@ type Wallet =
   }
 
 data Action
-  = Initialize 
-  | FindWallets 
+  = Initialize
+  | FindWallets
   | SelectWallet Wallet
   | DeselectWallet
-  | RaiseReloadWallet 
+  | RaiseReloadWallet
 
 type Output = Message
 
-data Message
-  = ReloadWallet
+data Message = ReloadWallet
 
 component
   :: ∀ query input m
@@ -68,94 +67,94 @@ component =
     }
   where
 
-    render :: State -> H.ComponentHTML Action () m
-    render Nothing =
-      HH.div [ css "navbar-item" ]
-        [ HH.div [ css "navbar-link" ]
-            [ HH.span [ css "icon is-small" ] 
-                [ HH.i [ css "fa fa-solid fa-spinner fa-spin" ] [] ] 
-            , HH.small [ css "pl-2" ]
-                [ HH.text "Identifying wallets ..."]
-            ]
-        ]
-
-    render (Just { wallets, selected: Nothing }) =
-        HH.div [ css "navbar-item has-dropdown is-hoverable" ]
-          [ HH.div [ css "navbar-link" ]
-              [ HH.text "Wallets"]
-          , HH.div [ css "navbar-dropdown is-right" ]
-              ( renderDropDownItem <$> wallets )
+  render :: State -> H.ComponentHTML Action () m
+  render Nothing =
+    HH.div [ css "navbar-item" ]
+      [ HH.div [ css "navbar-link" ]
+          [ HH.span [ css "icon is-small" ]
+              [ HH.i [ css "fa fa-solid fa-spinner fa-spin" ] [] ]
+          , HH.small [ css "pl-2" ]
+              [ HH.text "Identifying wallets ..." ]
           ]
+      ]
 
-    render (Just { wallets: _, selected: Just wallet }) =
-      HH.div [ css "navbar-item has-dropdown is-hoverable" ]
-        [ HH.div [ css "navbar-link" ]
-            [ HH.span [ css "icon is-small" ] 
-                [ HH.img [ HP.src wallet.icon ] ]
-            , HH.small [ css "pl-2" ]
-                [ HH.text wallet.name ]
-            ]
-        , HH.div [ css "navbar-dropdown is-right" ]
-            [ HH.a [ css "navbar-item pr-4", HE.onClick \_ -> RaiseReloadWallet ]
-                [ HH.div [ css "is-align-items-center is-flex" ]
-                    [ HH.span [ css "icon is-small" ]
-                        [ HH.i [ css "fa fa-refresh" ] [] ]
-                    , HH.span [ css "pl-2" ]
-                        [ HH.text "Reload"]
-                    ]
-                ]
-            , HH.hr [ css "dropdown-divider" ]
-            , HH.a [ css "navbar-item pr-4", HE.onClick \_ -> DeselectWallet ]
-                [ HH.div [ css "is-align-items-center is-flex" ]
-                    [ HH.span [ css "icon is-small" ]
-                        [ HH.i [ css "fa fa-xmark" ] [] ]
-                    , HH.span [ css "pl-2" ]
-                        [ HH.text "Disconnect"]
-                    ]
-                ]
-            ]
-        ]
+  render (Just { wallets, selected: Nothing }) =
+    HH.div [ css "navbar-item has-dropdown is-hoverable" ]
+      [ HH.div [ css "navbar-link" ]
+          [ HH.text "Wallets" ]
+      , HH.div [ css "navbar-dropdown is-right" ]
+          (renderDropDownItem <$> wallets)
+      ]
 
-    renderDropDownItem :: Wallet -> H.ComponentHTML Action () m
-    renderDropDownItem wallet =
-        HH.a [ css "navbar-item", HE.onClick \_ -> SelectWallet wallet ]
-          [ HH.div [ css "is-align-items-center is-flex" ]
-              [ HH.span [ css "icon is-small" ]
-                  [ HH.img [ HP.src wallet.icon ] ]
-              , HH.span [ css "pl-2" ] 
-                  [ HH.text wallet.name ]
+  render (Just { wallets: _, selected: Just wallet }) =
+    HH.div [ css "navbar-item has-dropdown is-hoverable" ]
+      [ HH.div [ css "navbar-link" ]
+          [ HH.span [ css "icon is-small" ]
+              [ HH.img [ HP.src wallet.icon ] ]
+          , HH.small [ css "pl-2" ]
+              [ HH.text wallet.name ]
+          ]
+      , HH.div [ css "navbar-dropdown is-right" ]
+          [ HH.a [ css "navbar-item pr-4", HE.onClick \_ -> RaiseReloadWallet ]
+              [ HH.div [ css "is-align-items-center is-flex" ]
+                  [ HH.span [ css "icon is-small" ]
+                      [ HH.i [ css "fa fa-refresh" ] [] ]
+                  , HH.span [ css "pl-2" ]
+                      [ HH.text "Reload" ]
+                  ]
+              ]
+          , HH.hr [ css "dropdown-divider" ]
+          , HH.a [ css "navbar-item pr-4", HE.onClick \_ -> DeselectWallet ]
+              [ HH.div [ css "is-align-items-center is-flex" ]
+                  [ HH.span [ css "icon is-small" ]
+                      [ HH.i [ css "fa fa-xmark" ] [] ]
+                  , HH.span [ css "pl-2" ]
+                      [ HH.text "Disconnect" ]
+                  ]
               ]
           ]
+      ]
 
-    handleAction :: Action -> H.HalogenM State Action () Output m Unit
-    handleAction = case _ of
-      Initialize -> do
-        _ <- H.fork $ delayAction FindWallets $ Milliseconds 1000.0
-        pure unit
+  renderDropDownItem :: Wallet -> H.ComponentHTML Action () m
+  renderDropDownItem wallet =
+    HH.a [ css "navbar-item", HE.onClick \_ -> SelectWallet wallet ]
+      [ HH.div [ css "is-align-items-center is-flex" ]
+          [ HH.span [ css "icon is-small" ]
+              [ HH.img [ HP.src wallet.icon ] ]
+          , HH.span [ css "pl-2" ]
+              [ HH.text wallet.name ]
+          ]
+      ]
 
-      FindWallets -> do
-        mbWallets <- H.lift $ availableWallets
-        for_ mbWallets \wallets ->
-          H.modify_ \_ -> Just { wallets: wallets, selected: Nothing } 
+  handleAction :: Action -> H.HalogenM State Action () Output m Unit
+  handleAction = case _ of
+    Initialize -> do
+      _ <- H.fork $ delayAction FindWallets $ Milliseconds 1000.0
+      pure unit
 
-      SelectWallet wallet -> do
-        log $ "Wallet selected: " <> WalletName.unwrap wallet.id
-        mbApi <- H.lift $ enableWallet wallet.id
-        for_ mbApi \api -> do
-            updateStore $ Store.EnableWallet { name: wallet.id, api: api }
-            H.modify_ \state -> (\choice -> choice { selected = Just wallet }) <$> state
+    FindWallets -> do
+      mbWallets <- H.lift $ availableWallets
+      for_ mbWallets \wallets ->
+        H.modify_ \_ -> Just { wallets: wallets, selected: Nothing }
 
-      DeselectWallet -> do
-        log "Wallet deselected"
-        H.modify_ \state -> (\choice -> choice { selected = Nothing }) <$> state
-        updateStore $ Store.DisableWallet
-        pure unit
+    SelectWallet wallet -> do
+      log $ "Wallet selected: " <> WalletName.unwrap wallet.id
+      mbApi <- H.lift $ enableWallet wallet.id
+      for_ mbApi \api -> do
+        updateStore $ Store.EnableWallet { name: wallet.id, api: api }
+        H.modify_ \state -> (\choice -> choice { selected = Just wallet }) <$> state
 
-      RaiseReloadWallet -> do
-        H.raise ReloadWallet
+    DeselectWallet -> do
+      log "Wallet deselected"
+      H.modify_ \state -> (\choice -> choice { selected = Nothing }) <$> state
+      updateStore $ Store.DisableWallet
+      pure unit
 
-    -- TODO: Extract to effectful type class
-    delayAction :: Action -> Milliseconds -> H.HalogenM State Action () Output m Unit
-    delayAction action ms = do
-      H.liftAff $ Aff.delay ms
-      handleAction action
+    RaiseReloadWallet -> do
+      H.raise ReloadWallet
+
+  -- TODO: Extract to effectful type class
+  delayAction :: Action -> Milliseconds -> H.HalogenM State Action () Output m Unit
+  delayAction action ms = do
+    H.liftAff $ Aff.delay ms
+    handleAction action

@@ -30,7 +30,7 @@ type Output = Maybe TxId
 type Form :: (Type -> Type -> Type -> Type) -> Row Type
 type Form f =
   ( recipient :: f String FormError CS.Address
-  , amount    :: f String FormError CS.BigNum
+  , amount :: f String FormError CS.BigNum
   )
 
 type FormContext = F.FormContext (Form F.FieldState) (Form (F.FieldAction Action)) Input Action
@@ -40,7 +40,7 @@ data Action
   = Receive (Connected Store.Store FormContext)
   | Eval FormlessAction
 
-type State = 
+type State =
   { store :: Store.Store
   , form :: FormContext
   }
@@ -56,91 +56,91 @@ component =
     { initialState: deriveState
     , render
     , eval: H.mkEval $ H.defaultEval
-      { receive = Just <<< Receive
-      , handleAction = handleAction
-      , handleQuery = handleQuery
-      }
+        { receive = Just <<< Receive
+        , handleAction = handleAction
+        , handleQuery = handleQuery
+        }
     }
   where
 
-    deriveState :: Connected Store.Store FormContext -> State
-    deriveState { context: store, input: form } = { store, form }
+  deriveState :: Connected Store.Store FormContext -> State
+  deriveState { context: store, input: form } = { store, form }
 
-    handleAction :: Action -> H.HalogenM _ _ _ _ _ Unit
-    handleAction = case _ of
-      Receive connected -> H.put $ deriveState connected
-      Eval formlessAction -> F.eval formlessAction
+  handleAction :: Action -> H.HalogenM _ _ _ _ _ Unit
+  handleAction = case _ of
+    Receive connected -> H.put $ deriveState connected
+    Eval formlessAction -> F.eval formlessAction
 
-    handleQuery :: ∀ a. F.FormQuery _ _ _ _ a -> H.HalogenM _ _ _ _ _ (Maybe a)
-    handleQuery = do
-      let
-        validation :: { | Form F.FieldValidation }
-        validation =
-          { recipient: bech32Format
-          , amount: bigNumFormat
-          }
-      F.handleSubmitValidate onSubmit F.validate validation
+  handleQuery :: ∀ a. F.FormQuery _ _ _ _ a -> H.HalogenM _ _ _ _ _ (Maybe a)
+  handleQuery = do
+    let
+      validation :: { | Form F.FieldValidation }
+      validation =
+        { recipient: bech32Format
+        , amount: bigNumFormat
+        }
+    F.handleSubmitValidate onSubmit F.validate validation
 
-    onSubmit :: { | Form F.FieldOutput } -> H.HalogenM _ _ _ _ _ Unit
-    onSubmit fields = do
-      { store } <- get
-      for_ store.wallet \wallet -> do
-        mbTxId <- sendAdaToAddress wallet.api
-          { recipientAddress: fields.recipient
-          , lovelaceAmount: fields.amount
-          }
-        F.raise mbTxId
-      pure unit  
+  onSubmit :: { | Form F.FieldOutput } -> H.HalogenM _ _ _ _ _ Unit
+  onSubmit fields = do
+    { store } <- get
+    for_ store.wallet \wallet -> do
+      mbTxId <- sendAdaToAddress wallet.api
+        { recipientAddress: fields.recipient
+        , lovelaceAmount: fields.amount
+        }
+      F.raise mbTxId
+    pure unit
 
-    render :: State -> H.ComponentHTML Action () m
-    render { store: { wallet }, form: { formActions, fields, actions } } =
-      HH.form [ css "pl-3 mt-3" , HE.onSubmit formActions.handleSubmit ]
-        [ HH.div [ css "field" ]
+  render :: State -> H.ComponentHTML Action () m
+  render { store: { wallet }, form: { formActions, fields, actions } } =
+    HH.form [ css "pl-3 mt-3", HE.onSubmit formActions.handleSubmit ]
+      [ HH.div [ css "field" ]
           [ HH.label [ css "label" ]
-            [ HH.text "Address where to send ADA" ]
+              [ HH.text "Address where to send ADA" ]
           , HH.div [ css "control has-icons-left" ]
-            [ HH.input 
-              [ case fields.recipient.result of
-                  Nothing -> css "input"
-                  Just (Left  _) -> css "input is-danger"
-                  Just (Right _) -> css "input is-success" 
-              , HP.type_ HP.InputText
-              , HP.placeholder "e.g. addr_test1qrt..."
-              , HP.required true
-              , HE.onValueInput actions.recipient.handleChange
-              , HE.onBlur actions.recipient.handleBlur
+              [ HH.input
+                  [ case fields.recipient.result of
+                      Nothing -> css "input"
+                      Just (Left _) -> css "input is-danger"
+                      Just (Right _) -> css "input is-success"
+                  , HP.type_ HP.InputText
+                  , HP.placeholder "e.g. addr_test1qrt..."
+                  , HP.required true
+                  , HE.onValueInput actions.recipient.handleChange
+                  , HE.onBlur actions.recipient.handleBlur
+                  ]
+              , HH.span [ css "icon is-small is-left" ]
+                  [ HH.i [ css "fa fa-solid fa-address-card" ] [] ]
               ]
-            , HH.span [ css "icon is-small is-left" ]
-              [ HH.i [ css "fa fa-solid fa-address-card" ] [] ]
-            ]
           , case fields.recipient.result of
               Just (Left err) -> HH.div [ css "content is-small has-text-danger" ] [ HH.text err ]
               _ -> HH.div_ []
           ]
-        , HH.div [ css "field" ]
+      , HH.div [ css "field" ]
           [ HH.label [ css "label" ]
-            [ HH.text "Lovelaces (1 000 000 Lovelace = 1 ADA)" ]
+              [ HH.text "Lovelaces (1 000 000 Lovelace = 1 ADA)" ]
           , HH.div [ css "control has-icons-left" ]
-            [ HH.input 
-              [ case fields.amount.result of
-                  Nothing -> css "input"
-                  Just (Left  _) -> css "input is-danger"
-                  Just (Right _) -> css "input is-success" 
-              , HP.type_ HP.InputText
-              , HP.placeholder "e.g. 1000000"
-              , HP.required true 
-              , HE.onValueInput actions.amount.handleChange
-              , HE.onBlur actions.amount.handleBlur
+              [ HH.input
+                  [ case fields.amount.result of
+                      Nothing -> css "input"
+                      Just (Left _) -> css "input is-danger"
+                      Just (Right _) -> css "input is-success"
+                  , HP.type_ HP.InputText
+                  , HP.placeholder "e.g. 1000000"
+                  , HP.required true
+                  , HE.onValueInput actions.amount.handleChange
+                  , HE.onBlur actions.amount.handleBlur
+                  ]
+              , HH.span [ css "icon is-small is-left" ]
+                  [ HH.i [ css "fa fa-solid fa-coins" ] [] ]
               ]
-            , HH.span [ css "icon is-small is-left" ]
-              [ HH.i [ css "fa fa-solid fa-coins" ] [] ]
-            ]
           , case fields.amount.result of
               Just (Left err) -> HH.div [ css "content is-small has-text-danger" ] [ HH.text err ]
               _ -> HH.div_ []
           ]
-        , HH.div [ css "field" ]
-          [ HH.button [ css "button is-medium is-success", HP.disabled $ isNothing wallet ] 
-            [ HH.text "Submit" ]
+      , HH.div [ css "field" ]
+          [ HH.button [ css "button is-medium is-success", HP.disabled $ isNothing wallet ]
+              [ HH.text "Submit" ]
           ]
-        ]
+      ]

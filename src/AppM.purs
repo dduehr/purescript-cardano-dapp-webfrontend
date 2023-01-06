@@ -51,25 +51,23 @@ instance manageWebPageAppM :: WebPage.ManageWebPage AppM where
   getWallet walletName =
     liftEffect $ do
       isWalletAvailable <- CW.isWalletAvailable walletName
-      if isWalletAvailable
-        then do
-          apiVersion <- CW.getApiVersion walletName
-          name <- CW.getName walletName
-          icon <- CW.getIcon walletName
-          pure $ Just
-            { id: walletName
-            , name: name
-            , apiVersion: apiVersion
-            , icon: icon
-            }
-        else
-          pure Nothing
+      if isWalletAvailable then do
+        apiVersion <- CW.getApiVersion walletName
+        name <- CW.getName walletName
+        icon <- CW.getIcon walletName
+        pure $ Just
+          { id: walletName
+          , name: name
+          , apiVersion: apiVersion
+          , icon: icon
+          }
+      else
+        pure Nothing
 
   availableWallets = do
     walletNames <- liftEffect $ CW.availableWallets
     blacklist <- _.blacklist <$> getStore
     sequence <$> (traverse WebPage.getWallet $ filter (\walletName -> WalletName.unwrap walletName `not elem` blacklist) walletNames)
-
 
 instance manageWalletAppM :: Wallet.ManageWallet AppM where
   enableWallet walletName = do
@@ -78,7 +76,7 @@ instance manageWalletAppM :: Wallet.ManageWallet AppM where
   getTxUnspentOuts walletApi = do
     mbArrayCbor <- logHush $ liftAff (attempt $ CW.getUtxos walletApi Nothing)
     let mbArrayUtxo = traverse CS.txUnspentOut.fromHex =<< mbArrayCbor
-    liftEffect $ for mbArrayUtxo CS.toMutableList 
+    liftEffect $ for mbArrayUtxo CS.toMutableList
 
   getChangeAddress walletApi = do
     mbCbor <- logHush $ liftAff (attempt $ CW.getChangeAddress walletApi)
@@ -93,7 +91,6 @@ instance manageWalletAppM :: Wallet.ManageWallet AppM where
     let cbor = CS.tx.toHex tx
     logHush $ liftAff (attempt $ CW.submitTx walletApi cbor)
 
-
 instance manageTxBuilderAppM :: TxBuilder.ManageTxBuilder AppM where
   new = do
     mbTxBuilderConfig <- _.txBuilderConfig <$> getStore
@@ -107,21 +104,18 @@ instance manageTxBuilderAppM :: TxBuilder.ManageTxBuilder AppM where
     liftEffect $ CS.txBuilder.addInsFrom txBuilder txUnspentOuts (toNumber 1)
 
   addChangeIfNedded txBuilder changeAddress =
-    liftEffect $ CS.txBuilder.addChangeIfNeeded txBuilder changeAddress 
+    liftEffect $ CS.txBuilder.addChangeIfNeeded txBuilder changeAddress
 
   build txBuilder =
     liftEffect $ CS.txBuilder.build txBuilder
-
 
 instance manageTxWitnessSetAppM :: TxWitnessSet.ManageTxWitnessSet AppM where
   new =
     liftEffect CS.txWitnessSet.new
 
-
 instance manageAuxiliaryDataAppM :: AuxiliaryData.ManageAuxiliaryData AppM where
   new =
     liftEffect CS.auxiliaryData.new
-
 
 instance manageAddressAppM :: Address.ManageAddress AppM where
   sendAdaToAddress walletApi fields = runMaybeT $ do
@@ -131,22 +125,19 @@ instance manageAddressAppM :: Address.ManageAddress AppM where
     lift $ TxBuilder.addInsFrom txBuilder txUnspentOuts
     changeAddress <- MaybeT $ Wallet.getChangeAddress walletApi
     changeAdded <- lift $ TxBuilder.addChangeIfNedded txBuilder changeAddress
-    if changeAdded
-      then do
-        txBody <- lift $ TxBuilder.build txBuilder
-        txWitnessSetEmpty <- lift $ TxWitnessSet.new
-        auxiliaryDataEmpty <- lift $ AuxiliaryData.new
-        let txUnsigned = CS.tx.new txBody txWitnessSetEmpty auxiliaryDataEmpty
-        txWitnessSetSigned <- MaybeT $ Wallet.signTx walletApi txUnsigned
-        let txSigned = CS.tx.new txBody txWitnessSetSigned auxiliaryDataEmpty
-        MaybeT $ Wallet.submitTx walletApi txSigned
-      else
-        MaybeT $ pure Nothing
-
+    if changeAdded then do
+      txBody <- lift $ TxBuilder.build txBuilder
+      txWitnessSetEmpty <- lift $ TxWitnessSet.new
+      auxiliaryDataEmpty <- lift $ AuxiliaryData.new
+      let txUnsigned = CS.tx.new txBody txWitnessSetEmpty auxiliaryDataEmpty
+      txWitnessSetSigned <- MaybeT $ Wallet.signTx walletApi txUnsigned
+      let txSigned = CS.tx.new txBody txWitnessSetSigned auxiliaryDataEmpty
+      MaybeT $ Wallet.submitTx walletApi txSigned
+    else
+      MaybeT $ pure Nothing
 
   sendTokenToAddress _ _ = do
     pure $ Nothing
-
 
 instance manageContractAppM :: Contract.ManageContract AppM where
   sendAdaToContract _ _ = do

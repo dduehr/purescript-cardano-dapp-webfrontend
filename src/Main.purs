@@ -19,22 +19,22 @@ main = HA.runHalogenAff do
   runUI rootComponent unit body
   where
 
-    blacklist :: Array String
-    blacklist = [ "ccvault" ]  
+  blacklist :: Array String
+  blacklist = [ "ccvault" ]
 
-    txBuilderConfig :: Maybe CS.TxBuilderConfig
-    txBuilderConfig = do
-      feeCoefficient <- CS.bigNum.fromStr "44"
-      feeConstant <- CS.bigNum.fromStr "155381"
-      poolDeposit <- CS.bigNum.fromStr "500000000"
-      keyDeposit <- CS.bigNum.fromStr "2000000"
-      coinsPerUtxoWord <- CS.bigNum.fromStr "34482"
-      pure $ CS.txBuilderConfigBuilder.build
-        $ flip CS.txBuilderConfigBuilder.preferPureChange true
-        $ flip CS.txBuilderConfigBuilder.maxTxSize 16384
-        $ flip CS.txBuilderConfigBuilder.maxValueSize 5000
-        $ flip CS.txBuilderConfigBuilder.coinsPerUtxoWord coinsPerUtxoWord
-        $ flip CS.txBuilderConfigBuilder.keyDeposit keyDeposit
-        $ flip CS.txBuilderConfigBuilder.poolDeposit poolDeposit
-        $ flip CS.txBuilderConfigBuilder.feeAlgo (CS.linearFee.new feeCoefficient feeConstant)
-        $ CS.txBuilderConfigBuilder.new   
+  txBuilderConfig :: Maybe CS.TxBuilderConfig
+  txBuilderConfig = do
+    feeCoefficient <- CS.bigNum.fromStr "44"
+    feeConstant <- CS.bigNum.fromStr "155381"
+    poolDeposit <- CS.bigNum.fromStr "500000000"
+    keyDeposit <- CS.bigNum.fromStr "2000000"
+    coinsPerUtxoWord <- CS.bigNum.fromStr "34482"
+    pure $ CS.txBuilderConfigBuilder.build
+      $ flip CS.txBuilderConfigBuilder.preferPureChange true
+      $ flip CS.txBuilderConfigBuilder.maxTxSize 16384
+      $ flip CS.txBuilderConfigBuilder.maxValueSize 5000
+      $ flip CS.txBuilderConfigBuilder.coinsPerUtxoWord coinsPerUtxoWord
+      $ flip CS.txBuilderConfigBuilder.keyDeposit keyDeposit
+      $ flip CS.txBuilderConfigBuilder.poolDeposit poolDeposit
+      $ flip CS.txBuilderConfigBuilder.feeAlgo (CS.linearFee.new feeCoefficient feeConstant)
+      $ CS.txBuilderConfigBuilder.new

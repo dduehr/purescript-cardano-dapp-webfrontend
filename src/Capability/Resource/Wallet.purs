@@ -19,6 +19,6 @@ class Monad m <= ManageWallet m where
 instance manageWalletHalogenM :: ManageWallet m => ManageWallet (H.HalogenM state action slots output m) where
   enableWallet = H.lift <<< enableWallet
   getTxUnspentOuts = H.lift <<< getTxUnspentOuts
-  getChangeAddress  = H.lift <<< getChangeAddress
+  getChangeAddress = H.lift <<< getChangeAddress
   signTx walletApi = H.lift <<< signTx walletApi
   submitTx walletApi = H.lift <<< submitTx walletApi

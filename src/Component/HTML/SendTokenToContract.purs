@@ -19,7 +19,7 @@ type Output = Maybe TxId
 
 type State = Store.Store
 
-data Action = 
+data Action =
   Receive (Connected Store.Store Input)
 
 component
@@ -32,21 +32,20 @@ component =
     { initialState: deriveState
     , render
     , eval: H.mkEval $ H.defaultEval
-      { handleAction = handleAction
-      , receive = Just <<< Receive
-      }
+        { handleAction = handleAction
+        , receive = Just <<< Receive
+        }
     }
   where
 
-    deriveState :: Connected Store.Store Input -> State
-    deriveState { context } = context
+  deriveState :: Connected Store.Store Input -> State
+  deriveState { context } = context
 
-    render :: State -> H.ComponentHTML Action () m
-    render _ = 
-      HH.form_ -- TODO: disabled if (isNothing state)
-        [
-          HH.text "TODO: SendTokenToContract ..."
-        ]
+  render :: State -> H.ComponentHTML Action () m
+  render _ =
+    HH.form_ -- TODO: disabled if (isNothing state)
+      [ HH.text "TODO: SendTokenToContract ..."
+      ]
 
-    handleAction :: Action -> H.HalogenM State Action () Output m Unit
-    handleAction (Receive input) = H.put $ deriveState input
+  handleAction :: Action -> H.HalogenM State Action () Output m Unit
+  handleAction (Receive input) = H.put $ deriveState input
