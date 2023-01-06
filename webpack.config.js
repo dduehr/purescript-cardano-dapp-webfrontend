@@ -11,23 +11,18 @@ const config = {
     },
     devServer: {
         open: true,
-        host: 'localhost',
+        host: 'localhost'
     },    
     plugins: [
         new HtmlWebpackPlugin({
-            template: 'index.html',
+            template: 'index.html'
         })
     ],
     experiments: {
         asyncWebAssembly: true
     },
-    stats: {
-        errorDetails: true,
-    },
     ignoreWarnings: [
-        {
-            module: /@emurgo\/cardano-serialization-lib-browser\/cardano_serialization_lib_bg\.js/
-        }
+        { module: /@emurgo\/cardano-serialization-lib-browser\/cardano_serialization_lib_bg\.js/ }
     ]
 };
 
