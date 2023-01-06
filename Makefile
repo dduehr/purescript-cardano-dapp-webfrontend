@@ -1,15 +1,12 @@
-.PHONY: build test run watch serve format check-format
+.PHONY: clean build test bundle watch serve format check-format
 
-esbuild-cmd := "esbuild \
-			./output/Main/index.js \
-			--bundle \
-			--outfile=bundle/purs.js \
-			--platform=browser \
-			--format=esm \
-			--external:@emurgo/cardano-serialization-lib-browser"
-
-build:
-	spago build 
+ESBUILD = esbuild \
+	./output/Main/index.js \
+	--bundle \
+	--outfile=bundle/purs.js \
+	--platform=browser \
+	--format=esm \
+	--external:@emurgo/cardano-serialization-lib-browser
 
 clean:
 	rm -r output/Frontend.*
@@ -17,21 +14,26 @@ clean:
 	rm -r bundle/
 	rm -r dist/ 		
 
+build:
+	spago build 
+
 test:
-	echo "TODO: implement purs tests"
+	echo "TODO: implement tests"
 
-bundle:
-	spago build --then ${esbuild-cmd}
+bundle: build
+	${ESBUILD}
 
-watch:
-	spago build --then ${esbuild-cmd} --watch
+watch: build
+	${ESBUILD} --watch
 
-serve:
-	(make -B bundle && npm run build && npm run serve)
+serve: bundle
+	npm run build
+	npm run serve
 	
 format:
 	purs-tidy format-in-place "src/**/*.purs"
 
 check-format:
 	purs-tidy check "src/**/*.purs"
+
 
