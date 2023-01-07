@@ -1,18 +1,14 @@
 {
-  "scripts": {
-    "check-format": "purs-tidy check \"src/**/*.purs\"",
-    "format": "purs-tidy format-in-place \"src/**/*.purs\"",
-    "prebuild": "npm run check-format",
-    "build": "spago build",
-    "pretest": "npm run build",
-    "test": "echo \"WARNING: No tests available.\" && exit 1",
-    "prebundle": "npm run build",
-    "bundle": "esbuild ./output/Main/index.js --bundle --platform=browser --format=esm --external:@emurgo/cardano-serialization-lib-browser --outfile=bundle/purs.js",
-    "predist": "npm run bundle",
-    "dist": "webpack --mode=production --node-env=production",
-    "preserve": "npm run dist",
-    "serve": "webpack serve",
-    "clean": "rm -r output/Frontend.* output/Main/ bundle/ dist/ 2> /dev/null"
+  "name": "purescript-cardano-dapp-webfrontend",
+  "description": "An exemplary Cardano dApp web-frontend application implemented with PureScript and the Halogen framework",
+  "author": "Dirk Duehr",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dduehr/purescript-cardano-dapp-webfrontend"
+  },
+  "dependencies": {
+    "@emurgo/cardano-serialization-lib-browser": "^11.2.1"
   },
   "devDependencies": {
     "html-webpack-plugin": "^5.5.0",
@@ -20,7 +16,18 @@
     "webpack-cli": "^5.0.1",
     "webpack-dev-server": "^4.11.1"
   },
-  "dependencies": {
-    "@emurgo/cardano-serialization-lib-browser": "^11.2.1"
+  "scripts": {
+    "format": "purs-tidy format-in-place \"src/**/*.purs\"",
+    "prebuild": "npm run format",
+    "build": "spago build",
+    "pretest": "npm run build",
+    "test": "echo \"WARNING: No tests available.\" && exit 1",
+    "prebundle": "npm run build",
+    "bundle": "esbuild ./output/Main/index.js --bundle --outfile=bundle/purs.js --platform=browser --format=esm --external:@emurgo/cardano-serialization-lib-browser",
+    "predist": "npm run bundle",
+    "dist": "webpack --mode=production --node-env=production",
+    "preserve": "npm run dist",
+    "serve": "webpack serve",
+    "clean": "rm -r output/Frontend.* output/Main/ bundle/ dist/ 2> /dev/null"
   }
 }
