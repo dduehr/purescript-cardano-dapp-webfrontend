@@ -9,7 +9,6 @@ import Data.Maybe (Maybe(..))
 import Data.Time.Duration (Milliseconds(..))
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
-import Effect.Class.Console (log)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -19,6 +18,7 @@ import Halogen.Store.Monad (class MonadStore, updateStore)
 import Network.RemoteData (RemoteData(..))
 
 import Frontend.Api.WalletName (unwrap) as WalletName
+import Frontend.Capability.LogMessages (class LogMessages, logMessage)
 import Frontend.Capability.Resource.Wallet (class ManageWallet, enableWallet)
 import Frontend.Capability.Resource.WebPage (class ManageWebPage, availableWallets)
 import Frontend.Component.HTML.Utils (css, whenElem)
@@ -60,6 +60,7 @@ data Message = ReloadWallet
 component
   :: ∀ query input m
    . MonadAff m
+  => LogMessages m
   => MonadStore Store.Action Store.Store m
   => ManageWebPage m
   => ManageWallet m
@@ -97,7 +98,7 @@ component =
       H.put $ Failure VisibleHint
 
     SelectWallet wallet -> do
-      log $ "Wallet selected: " <> WalletName.unwrap wallet.id
+      logMessage $ "Wallet selected: " <> WalletName.unwrap wallet.id
       mbApi <- H.lift $ enableWallet wallet.id
       for_ mbApi \api -> do
         updateStore $ Store.EnableWallet { name: wallet.id, api: api }
@@ -106,7 +107,7 @@ component =
           _ -> state
 
     DeselectWallet -> do
-      log "Wallet deselected"
+      logMessage "Wallet deselected"
       H.modify_ \state -> case state of
         Success choice -> Success choice { selected = Nothing }
         _ -> state
@@ -115,6 +116,7 @@ component =
     RaiseReloadWallet -> do
       H.raise ReloadWallet
 
+  -- FIXME: Move to capabilities to get rid of the type class constraint MonadAff 
   delayAction :: Action -> Milliseconds -> H.HalogenM State Action () Output m Unit
   delayAction action ms = do
     H.liftAff $ Aff.delay ms

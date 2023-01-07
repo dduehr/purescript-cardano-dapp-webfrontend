@@ -16,6 +16,8 @@ class Monad m <= ManageWallet m where
   signTx :: CW.Api -> CS.Tx -> m (Maybe CS.TxWitnessSet)
   submitTx :: CW.Api -> CS.Tx -> m (Maybe TxId)
 
+-- TODO: move wallet actions from component WalletView to here  
+
 instance manageWalletHalogenM :: ManageWallet m => ManageWallet (H.HalogenM state action slots output m) where
   enableWallet = H.lift <<< enableWallet
   getTxUnspentOuts = H.lift <<< getTxUnspentOuts

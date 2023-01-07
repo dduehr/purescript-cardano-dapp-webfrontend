@@ -16,6 +16,7 @@ import Halogen.HTML.Events as HE
 import Halogen.Store.Monad (class MonadStore)
 import Type.Proxy (Proxy(..))
 
+import Frontend.Capability.LogMessages (class LogMessages)
 import Frontend.Capability.Resource.Address (class ManageAddress)
 import Frontend.Capability.Resource.Contract (class ManageContract)
 import Frontend.Capability.Resource.WebPage (class ManageWebPage)
@@ -63,6 +64,7 @@ type Slots =
 component
   :: ∀ query input output m
    . MonadAff m
+  => LogMessages m
   => MonadStore Store.Action Store.Store m
   => ManageWebPage m
   => ManageAddress m

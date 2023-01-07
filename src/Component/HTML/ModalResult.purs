@@ -4,8 +4,6 @@ import Prelude
 
 import Data.Maybe (Maybe(..))
 import Data.String (take)
-import Effect.Aff.Class (class MonadAff)
-import Effect.Class.Console (log)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -14,6 +12,8 @@ import Halogen.HTML.Properties.ARIA as HA
 import Frontend.Component.HTML.Utils (css)
 import Frontend.Data.Tx (TxId)
 import Frontend.Data.Result (Result(..))
+
+import Frontend.Capability.LogMessages (class LogMessages, logMessage)
 
 data Query a = Show (Result TxId) a
 
@@ -25,7 +25,7 @@ data Action
 
 component
   :: ∀ input output m
-   . MonadAff m
+   . LogMessages m
   => H.Component Query input output m
 component =
   H.mkComponent
@@ -100,6 +100,6 @@ component =
   handleAction :: Action -> H.HalogenM State Action () output m Unit
   handleAction = case _ of
     Copy txId ->
-      log $ "TODO: copy to clipboard " <> txId
+      logMessage $ "TODO: copy to clipboard " <> txId
     Hide ->
       H.put Nothing
