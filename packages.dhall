@@ -98,9 +98,6 @@ in  upstream
       }
 -------------------------------
 -}
---let upstream =
---      https://github.com/purescript/package-sets/releases/download/psc-0.15.4-20221018/packages.dhall
---        sha256:b1db2e4a17260ace8d17858602f8c56f460982d6e404818d7f6cb9f053324bb1
 let upstream =
       https://github.com/purescript/package-sets/releases/download/psc-0.15.0-20220504/packages.dhall
         sha256:fd37736ecaa24491c907af6a6422156417f21fbf25763de19f65bd641e8340d3
@@ -121,7 +118,6 @@ in  upstream
       , version =
           "227f349fdd91bd1b7c7521fa695dd806d11d1381"
       }
-  {- with purescript-cip30 = ../purescript-cip30/spago.dhall as Location --}
   with purescript-cardano-serialization-lib =
       { dependencies = 
           [ "arraybuffer-types"
@@ -140,27 +136,3 @@ in  upstream
       , version =
           "541eb0b1bf128a426d3d0d1e8ffc683a1237de23"
       }
-  --with purescript-cardano-serialization-lib = ../purescript-cardano-serialization-lib/spago.dhall as Location
-  with halogen-formless =
-    { version = "v3.0.0"
-    , repo = "https://github.com/thomashoneyman/purescript-halogen-formless.git"
-    , dependencies =
-        [ "convertable-options"
-        , "effect"
-        , "either"
-        , "foldable-traversable"
-        , "foreign-object"
-        , "halogen"
-        , "heterogeneous"
-        , "maybe"
-        , "prelude"
-        , "record"
-        , "safe-coerce"
-        , "type-equality"
-        , "unsafe-coerce"
-        , "unsafe-reference"
-        , "variant"
-        , "web-events"
-        , "web-uievents"
-        ]
-    }
