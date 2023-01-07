@@ -101,7 +101,7 @@ component =
       logMessage $ "Wallet selected: " <> WalletName.unwrap wallet.id
       mbApi <- H.lift $ enableWallet wallet.id
       for_ mbApi \api -> do
-        updateStore $ Store.EnableWallet { name: wallet.id, api: api }
+        updateStore $ Store.EnableWallet { id: wallet.id, api: api }
         H.modify_ \state -> case state of
           Success choice -> Success choice { selected = Just wallet }
           _ -> state

@@ -75,7 +75,7 @@ component =
   deriveState { context: context } = Received context
 
   eqContext :: Context -> Context -> Boolean
-  eqContext (Just walletA) (Just walletB) = WalletName.unwrap walletA.name == WalletName.unwrap walletB.name
+  eqContext (Just walletA) (Just walletB) = WalletName.unwrap walletA.id == WalletName.unwrap walletB.id
   eqContext Nothing Nothing = true
   eqContext _ _ = false
 
@@ -104,7 +104,7 @@ component =
   renderContext (Just wallet) =
     HH.span_
       [ HH.text "Connecting to wallet "
-      , HH.text $ WalletName.unwrap wallet.name
+      , HH.text $ WalletName.unwrap wallet.id
       , HH.text " ..."
       ]
 
@@ -271,11 +271,11 @@ component =
 
     Receive { context: Just wallet } -> do
       H.put $ Received $ Just wallet
-      name <- liftEffect $ CW.getName wallet.name
-      apiVersion <- liftEffect $ CW.getApiVersion wallet.name
+      name <- liftEffect $ CW.getName wallet.id
+      apiVersion <- liftEffect $ CW.getApiVersion wallet.id
       networkId <- liftAff $ CW.getNetworkId wallet.api
       H.put $ Loaded
-        { id: wallet.name
+        { id: wallet.id
         , name: name
         , apiVersion: apiVersion
         , api: wallet.api

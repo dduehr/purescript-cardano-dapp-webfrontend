@@ -10,9 +10,8 @@ type Store =
   , txBuilderConfig :: Maybe CS.TxBuilderConfig
   }
 
--- FIXME: rename "name" to "id"
 type Wallet =
-  { name :: CW.WalletName
+  { id :: CW.WalletName
   , api :: CW.Api
   }
 
