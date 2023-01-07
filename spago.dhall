@@ -29,6 +29,7 @@ to generate this file without the comments in this block.
   , "profunctor-lenses"
   , "purescript-cardano-serialization-lib"
   , "purescript-cip30"
+  , "remotedata"
   , "safe-coerce"
   , "strings"
   , "transformers"
