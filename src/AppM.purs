@@ -3,6 +3,7 @@ module Frontend.AppM where
 import Prelude
 
 import Cardano.Wallet (availableWallets, enable, getApiVersion, getChangeAddress, getIcon, getName, getUtxos, isWalletAvailable, signTx, submitTx) as CW
+import Control.Monad.Error.Class (try)
 import Control.Monad.Maybe.Trans (MaybeT(..), runMaybeT)
 import Control.Monad.Trans.Class (lift)
 import Csl as CS
@@ -11,6 +12,7 @@ import Data.Foldable (elem)
 import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
 import Data.Traversable (for, sequence, traverse)
+import Effect (Effect)
 import Effect.Aff (Aff, attempt)
 import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
@@ -70,26 +72,25 @@ instance manageWebPageAppM :: WebPage.ManageWebPage AppM where
     sequence <$> (traverse WebPage.getWallet $ filter (\walletName -> WalletName.unwrap walletName `not elem` blacklist) walletNames)
 
 instance manageWalletAppM :: Wallet.ManageWallet AppM where
-  enableWallet walletName = do
-    logHush $ liftAff (attempt $ CW.enable walletName)
+  enableWallet walletName = maybeAff $ CW.enable walletName
 
   getTxUnspentOuts walletApi = do
-    mbArrayCbor <- logHush $ liftAff (attempt $ CW.getUtxos walletApi Nothing)
+    mbArrayCbor <- maybeAff $ CW.getUtxos walletApi Nothing
     let mbArrayUtxo = traverse CS.txUnspentOut.fromHex =<< mbArrayCbor
     liftEffect $ for mbArrayUtxo CS.toMutableList
 
   getChangeAddress walletApi = do
-    mbCbor <- logHush $ liftAff (attempt $ CW.getChangeAddress walletApi)
+    mbCbor <- maybeAff $ CW.getChangeAddress walletApi
     pure $ CS.address.fromHex =<< mbCbor
 
   signTx walletApi tx = do
     let cbor = CS.tx.toHex tx
-    mbTxWitnessSetHex <- logHush $ liftAff (attempt $ CW.signTx walletApi cbor false)
+    mbTxWitnessSetHex <- maybeAff $ CW.signTx walletApi cbor false
     pure $ CS.txWitnessSet.fromHex =<< mbTxWitnessSetHex
 
   submitTx walletApi tx = do
     let cbor = CS.tx.toHex tx
-    logHush $ liftAff (attempt $ CW.submitTx walletApi cbor)
+    maybeAff $ CW.submitTx walletApi cbor
 
 instance manageTxBuilderAppM :: TxBuilder.ManageTxBuilder AppM where
   new = do
@@ -151,3 +152,9 @@ instance manageContractAppM :: Contract.ManageContract AppM where
 
   redeemTokenFromContract _ _ = do
     pure $ Nothing
+
+maybeEffect :: ∀ m a. LogMessages m => MonadEffect m => Effect a -> m (Maybe a)
+maybeEffect = logHush <<< liftEffect <<< try
+
+maybeAff :: ∀ m a. LogMessages m => MonadAff m => Aff a -> m (Maybe a)
+maybeAff = logHush <<< liftAff <<< attempt
