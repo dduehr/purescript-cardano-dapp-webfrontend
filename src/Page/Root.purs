@@ -12,9 +12,9 @@ import Type.Proxy (Proxy(..))
 
 import Frontend.Capability.LogMessages (class LogMessages)
 import Frontend.Capability.Resource.Address (class ManageAddress)
+import Frontend.Capability.Resource.Browser (class ManageBrowser)
 import Frontend.Capability.Resource.Contract (class ManageContract)
 import Frontend.Capability.Resource.Wallet (class ManageWallet)
-import Frontend.Capability.Resource.WebPage (class ManageWebPage)
 import Frontend.Component.HTML.Utils (css)
 import Frontend.Component.HTML.WalletActions (component) as WalletActions
 import Frontend.Component.HTML.WalletView (component, Query(..)) as WalletView
@@ -32,12 +32,12 @@ type Slots =
 component
   :: ∀ query input output m
    . MonadAff m
-  => LogMessages m
-  => MonadStore Store.Action Store.Store m
-  => ManageWebPage m
+  => ManageBrowser m
   => ManageWallet m
   => ManageAddress m
   => ManageContract m
+  => LogMessages m
+  => MonadStore Store.Action Store.Store m
   => H.Component query input output m
 component =
   H.mkComponent

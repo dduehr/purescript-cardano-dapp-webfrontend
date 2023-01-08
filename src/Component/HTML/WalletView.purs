@@ -5,17 +5,16 @@ module Frontend.Component.HTML.WalletView
 
 import Prelude
 
-import Cardano.Wallet (Api, NetworkId, WalletName)
-import Cardano.Wallet (getApiVersion, getBalance, getChangeAddress, getName, getNetworkId, getRewardAddresses, getUsedAddresses, getUtxos) as CW
-import Csl (Address, BigNum, TxUnspentOut, address, bigNum, fromHex, txHash, txIn, txOut, txUnspentOut, value) as CS
+import Cardano.Wallet as CW
+import Control.Monad.Maybe.Trans (MaybeT(..), runMaybeT)
+import Csl as CS
 import Data.Array.NonEmpty (fromArray, head)
 import Data.Int (floor)
 import Data.Lens (Lens', Prism', prism', set)
 import Data.Lens.Record (prop)
 import Data.Maybe (Maybe(..))
-import Data.Traversable (traverse)
-import Effect.Aff.Class (class MonadAff, liftAff)
-import Effect.Class (liftEffect)
+import Data.Traversable (for_)
+import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.Store.Connect (Connected, connect)
@@ -23,26 +22,28 @@ import Halogen.Store.Monad (class MonadStore)
 import Halogen.Store.Select (Selector, select)
 import Type.Proxy (Proxy(..))
 
-import Frontend.Api.WalletName (unwrap) as WalletName
 import Frontend.Component.HTML.Utils (css)
-import Frontend.Store (Action, Store, Wallet) as Store
+import Frontend.Capability.Resource.Browser (class ManageBrowser, getWallet)
+import Frontend.Capability.Resource.Wallet (class ManageWallet, getNetworkId, getBalance, getChangeAddress, getRewardAddresses, getUsedAddresses, getUtxos)
+import Frontend.Data.Wallet (WalletApi, WalletCredentials, WalletId)
+import Frontend.Store (Action, Store) as Store
 
 type Input = Unit
 
 data Query a = ReloadWallet a
 
-type Context = Maybe Store.Wallet
+type Context = Maybe WalletCredentials
 
 data State
   = Received Context
   | Loaded Wallet
 
 type Wallet =
-  { id :: WalletName
+  { id :: WalletId
   , name :: String
   , apiVersion :: String
-  , api :: Api
-  , networkId :: NetworkId
+  , api :: WalletApi
+  , networkId :: CW.NetworkId
   , balance :: Maybe CS.BigNum
   , changeAddress :: Maybe CS.Address
   , rewardAddresses :: Maybe (Array CS.Address)
@@ -57,6 +58,8 @@ data Action
 component
   :: ∀ output m
    . MonadAff m
+  => ManageBrowser m
+  => ManageWallet m
   => MonadStore Store.Action Store.Store m
   => H.Component Query Input output m
 component =
@@ -71,16 +74,89 @@ component =
     }
   where
 
-  deriveState :: Connected Context Input -> State
-  deriveState { context: context } = Received context
-
-  eqContext :: Context -> Context -> Boolean
-  eqContext (Just walletA) (Just walletB) = WalletName.unwrap walletA.id == WalletName.unwrap walletB.id
-  eqContext Nothing Nothing = true
-  eqContext _ _ = false
-
   selectContext :: Selector Store.Store Context
-  selectContext = select eqContext \store -> store.wallet
+  selectContext = select (\a b -> (_.id <$> a) == (_.id <$> b)) \store -> store.mbWalletCredentials
+
+  deriveState :: Connected Context Input -> State
+  deriveState { context: mbWalletCredentials } = Received mbWalletCredentials
+
+  handleAction :: Action -> H.HalogenM State Action () output m Unit
+  handleAction = case _ of
+    Receive { context: Nothing } ->
+      H.put $ Received Nothing
+
+    Receive { context: Just walletCredentials } -> do
+      H.put $ Received (Just walletCredentials)
+      mbWallet <- H.lift $ runMaybeT $ do
+        wallet <- MaybeT $ getWallet walletCredentials.id
+        networkId <- MaybeT $ getNetworkId walletCredentials.api
+        pure
+          { id: walletCredentials.id
+          , name: wallet.name
+          , apiVersion: wallet.apiVersion
+          , api: walletCredentials.api
+          , networkId: networkId
+          , balance: Nothing
+          , changeAddress: Nothing
+          , rewardAddresses: Nothing
+          , usedAddresses: Nothing
+          , utxos: Nothing
+          }
+      for_ mbWallet \wallet -> do
+        H.put $ Loaded wallet
+        handleAction Reload
+
+    Reload -> do
+      state <- H.get
+      case state of
+        Loaded wallet -> do
+          H.modify_ \state' -> set (_Loaded <<< _balance) Nothing state'
+          balance <- getBalance wallet.api
+          H.modify_ \state' -> set (_Loaded <<< _balance) balance state'
+
+          H.modify_ \state' -> set (_Loaded <<< _changeAddress) Nothing state'
+          changeAddress <- getChangeAddress wallet.api
+          H.modify_ \state' -> set (_Loaded <<< _changeAddress) changeAddress state'
+
+          H.modify_ \state' -> set (_Loaded <<< _rewardAddresses) Nothing state'
+          rewardAddresses <- getRewardAddresses wallet.api
+          H.modify_ \state' -> set (_Loaded <<< _rewardAddresses) rewardAddresses state'
+
+          H.modify_ \state' -> set (_Loaded <<< _usedAddresses) Nothing state'
+          usedAddresses <- getUsedAddresses wallet.api
+          H.modify_ \state' -> set (_Loaded <<< _usedAddresses) usedAddresses state'
+
+          H.modify_ \state' -> set (_Loaded <<< _utxos) Nothing state'
+          utxos <- getUtxos wallet.api
+          H.modify_ \state' -> set (_Loaded <<< _utxos) utxos state'
+
+        _ -> pure unit
+
+  handleQuery :: ∀ a. Query a -> H.HalogenM State Action () output m (Maybe a)
+  handleQuery = case _ of
+    ReloadWallet a -> do
+      _ <- handleAction Reload
+      pure $ Just a
+
+  _Loaded :: Prism' State Wallet
+  _Loaded = prism' Loaded case _ of
+    Loaded wallet -> Just wallet
+    _ -> Nothing
+
+  _balance :: Lens' Wallet (Maybe CS.BigNum)
+  _balance = prop (Proxy :: Proxy "balance")
+
+  _changeAddress :: Lens' Wallet (Maybe CS.Address)
+  _changeAddress = prop (Proxy :: Proxy "changeAddress")
+
+  _rewardAddresses :: Lens' Wallet (Maybe (Array CS.Address))
+  _rewardAddresses = prop (Proxy :: Proxy "rewardAddresses")
+
+  _usedAddresses :: Lens' Wallet (Maybe (Array CS.Address))
+  _usedAddresses = prop (Proxy :: Proxy "usedAddresses")
+
+  _utxos :: Lens' Wallet (Maybe (Array CS.TxUnspentOut))
+  _utxos = prop (Proxy :: Proxy "utxos")
 
   render :: State -> H.ComponentHTML Action () m
   render (Received context) =
@@ -104,7 +180,7 @@ component =
   renderContext (Just wallet) =
     HH.span_
       [ HH.text "Connecting to wallet "
-      , HH.text $ WalletName.unwrap wallet.id
+      , HH.text $ show wallet.id
       , HH.text " ..."
       ]
 
@@ -263,80 +339,3 @@ component =
   renderSpinner =
     HH.span [ css "icon is-small" ]
       [ HH.i [ css "fa fa-solid fa-spinner fa-spin" ] [] ]
-
-  handleAction :: Action -> H.HalogenM State Action () output m Unit
-  handleAction = case _ of
-    Receive { context: Nothing } ->
-      H.put $ Received Nothing
-
-    Receive { context: Just wallet } -> do
-      H.put $ Received $ Just wallet
-      name <- liftEffect $ CW.getName wallet.id
-      apiVersion <- liftEffect $ CW.getApiVersion wallet.id
-      networkId <- liftAff $ CW.getNetworkId wallet.api
-      H.put $ Loaded
-        { id: wallet.id
-        , name: name
-        , apiVersion: apiVersion
-        , api: wallet.api
-        , networkId: networkId
-        , balance: Nothing
-        , changeAddress: Nothing
-        , rewardAddresses: Nothing
-        , usedAddresses: Nothing
-        , utxos: Nothing
-        }
-      handleAction Reload
-
-    Reload -> do
-      state <- H.get
-      case state of
-
-        (Loaded wallet) -> do
-          H.modify_ \state' -> set (_Loaded <<< _balance) Nothing state'
-          balance <- H.liftAff $ CS.fromHex <$> CW.getBalance wallet.api
-          H.modify_ \state' -> set (_Loaded <<< _balance) balance state'
-
-          H.modify_ \state' -> set (_Loaded <<< _changeAddress) Nothing state'
-          changeAddress <- H.liftAff $ CS.fromHex <$> CW.getChangeAddress wallet.api
-          H.modify_ \state' -> set (_Loaded <<< _changeAddress) changeAddress state'
-
-          H.modify_ \state' -> set (_Loaded <<< _rewardAddresses) Nothing state'
-          rewardAddresses <- liftAff $ traverse CS.address.fromHex <$> CW.getRewardAddresses wallet.api
-          H.modify_ \state' -> set (_Loaded <<< _rewardAddresses) rewardAddresses state'
-
-          H.modify_ \state' -> set (_Loaded <<< _usedAddresses) Nothing state'
-          usedAddresses <- liftAff $ traverse CS.address.fromHex <$> CW.getUsedAddresses wallet.api { limit: 10, page: 0 }
-          H.modify_ \state' -> set (_Loaded <<< _usedAddresses) usedAddresses state'
-
-          H.modify_ \state' -> set (_Loaded <<< _utxos) Nothing state'
-          utxos <- liftAff $ traverse CS.txUnspentOut.fromHex <$> CW.getUtxos wallet.api Nothing
-          H.modify_ \state' -> set (_Loaded <<< _utxos) utxos state'
-
-        _ -> pure unit
-
-  _Loaded :: Prism' State Wallet
-  _Loaded = prism' Loaded case _ of
-    Loaded wallet -> Just wallet
-    _ -> Nothing
-
-  _balance :: Lens' Wallet (Maybe CS.BigNum)
-  _balance = prop (Proxy :: Proxy "balance")
-
-  _changeAddress :: Lens' Wallet (Maybe CS.Address)
-  _changeAddress = prop (Proxy :: Proxy "changeAddress")
-
-  _rewardAddresses :: Lens' Wallet (Maybe (Array CS.Address))
-  _rewardAddresses = prop (Proxy :: Proxy "rewardAddresses")
-
-  _usedAddresses :: Lens' Wallet (Maybe (Array CS.Address))
-  _usedAddresses = prop (Proxy :: Proxy "usedAddresses")
-
-  _utxos :: Lens' Wallet (Maybe (Array CS.TxUnspentOut))
-  _utxos = prop (Proxy :: Proxy "utxos")
-
-  handleQuery :: ∀ a. Query a -> H.HalogenM State Action () output m (Maybe a)
-  handleQuery = case _ of
-    ReloadWallet a -> do
-      _ <- handleAction Reload
-      pure $ Just a

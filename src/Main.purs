@@ -14,16 +14,13 @@ import Frontend.Page.Root (component) as Root
 main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
-  let initialStore = { blacklist, wallet: Nothing, txBuilderConfig }
+  let initialStore = { mbWalletCredentials: Nothing, mbTxBuilderConfig, blacklistedWallets }
   rootComponent <- runAppM initialStore Root.component
   runUI rootComponent unit body
   where
 
-  blacklist :: Array String
-  blacklist = [ "ccvault" ]
-
-  txBuilderConfig :: Maybe CS.TxBuilderConfig
-  txBuilderConfig = do
+  mbTxBuilderConfig :: Maybe CS.TxBuilderConfig
+  mbTxBuilderConfig = do
     feeCoefficient <- CS.bigNum.fromStr "44"
     feeConstant <- CS.bigNum.fromStr "155381"
     poolDeposit <- CS.bigNum.fromStr "500000000"
@@ -38,3 +35,6 @@ main = HA.runHalogenAff do
       $ flip CS.txBuilderConfigBuilder.poolDeposit poolDeposit
       $ flip CS.txBuilderConfigBuilder.feeAlgo (CS.linearFee.new feeCoefficient feeConstant)
       $ CS.txBuilderConfigBuilder.new
+
+  blacklistedWallets :: Array String
+  blacklistedWallets = [ "ccvault" ]

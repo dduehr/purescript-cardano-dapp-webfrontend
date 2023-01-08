@@ -18,8 +18,9 @@ import Type.Proxy (Proxy(..))
 
 import Frontend.Capability.LogMessages (class LogMessages)
 import Frontend.Capability.Resource.Address (class ManageAddress)
+import Frontend.Capability.Resource.Browser (class ManageBrowser)
 import Frontend.Capability.Resource.Contract (class ManageContract)
-import Frontend.Capability.Resource.WebPage (class ManageWebPage)
+import Frontend.Capability.Resource.Wallet (class ManageWallet)
 import Frontend.Component.HTML.ModalResult (Query(..), component) as ModalResult
 import Frontend.Component.HTML.RedeemAdaFromContract (component) as RedeemAdaFromContract
 import Frontend.Component.HTML.RedeemTokenFromContract (component) as RedeemTokenFromContract
@@ -28,8 +29,8 @@ import Frontend.Component.HTML.SendAdaToContract (component) as SendAdaToContrac
 import Frontend.Component.HTML.SendTokenToAddress (component) as SendTokenToAddress
 import Frontend.Component.HTML.SendTokenToContract (component) as SendTokenToContract
 import Frontend.Component.HTML.Utils (css)
-import Frontend.Data.Tx (TxId)
 import Frontend.Data.Result (Result(..))
+import Frontend.Data.Tx (TxId)
 import Frontend.Store as Store
 
 data State = Selected MenuItem
@@ -64,11 +65,12 @@ type Slots =
 component
   :: ∀ query input output m
    . MonadAff m
-  => LogMessages m
-  => MonadStore Store.Action Store.Store m
-  => ManageWebPage m
+  => ManageBrowser m
+  => ManageWallet m
   => ManageAddress m
   => ManageContract m
+  => LogMessages m
+  => MonadStore Store.Action Store.Store m
   => H.Component query input output m
 component =
   H.mkComponent

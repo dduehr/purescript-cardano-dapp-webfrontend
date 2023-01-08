@@ -2,10 +2,8 @@ module Frontend.Component.HTML.WalletsDropDown (Message(..), component) where
 
 import Prelude
 
-import Cardano.Wallet (WalletName)
-import Data.Array (null)
-import Data.Foldable (for_)
 import Data.Maybe (Maybe(..))
+import Data.Array.NonEmpty (NonEmptyArray, toArray)
 import Data.Time.Duration (Milliseconds(..))
 import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
@@ -14,31 +12,28 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 import Halogen.HTML.Properties.ARIA as HA
-import Halogen.Store.Monad (class MonadStore, updateStore)
 import Network.RemoteData (RemoteData(..))
 
-import Frontend.Api.WalletName (unwrap) as WalletName
 import Frontend.Capability.LogMessages (class LogMessages, logMessage)
-import Frontend.Capability.Resource.Wallet (class ManageWallet, enableWallet)
-import Frontend.Capability.Resource.WebPage (class ManageWebPage, availableWallets)
+import Frontend.Capability.Resource.Browser (class ManageBrowser, disableWallet, enableWallet, getWallets)
 import Frontend.Component.HTML.Utils (css, whenElem)
-import Frontend.Store (Action(..), Store) as Store
+import Frontend.Data.Wallet (WalletId)
 
 type State = RemoteData InCaseOfNoWallets Choice
 
 data InCaseOfNoWallets
-  = VisibleHint
-  | HiddenHint
+  = Hint
+  | NoHint
 
 derive instance eqInCaseOfNoWallets :: Eq InCaseOfNoWallets
 
 type Choice =
-  { wallets :: Array Wallet -- TODO: non empty ...
+  { wallets :: NonEmptyArray Wallet
   , selected :: Maybe Wallet
   }
 
 type Wallet =
-  { id :: WalletName
+  { id :: WalletId
   , name :: String
   , apiVersion :: String
   , icon :: String
@@ -60,10 +55,8 @@ data Message = ReloadWallet
 component
   :: ∀ query input m
    . MonadAff m
+  => ManageBrowser m
   => LogMessages m
-  => MonadStore Store.Action Store.Store m
-  => ManageWebPage m
-  => ManageWallet m
   => H.Component query input Output m
 component =
   H.mkComponent
@@ -84,34 +77,31 @@ component =
       pure unit
 
     FindWallets -> do
-      mbWallets <- H.lift $ availableWallets
-      case mbWallets of
-        Just wallets ->
-          if not (null wallets) then H.put $ Success { wallets: wallets, selected: Nothing }
-          else H.put $ Failure VisibleHint
-        Nothing -> H.put $ Failure VisibleHint
+      mbWallets <- getWallets
+      H.put $ case mbWallets of
+        Just wallets -> Success { wallets: wallets, selected: Nothing }
+        _ -> Failure Hint
 
     HideHint -> do
-      H.put $ Failure HiddenHint
+      H.put $ Failure NoHint
 
     ShowHint -> do
-      H.put $ Failure VisibleHint
+      H.put $ Failure Hint
 
     SelectWallet wallet -> do
-      logMessage $ "Wallet selected: " <> WalletName.unwrap wallet.id
-      mbApi <- H.lift $ enableWallet wallet.id
-      for_ mbApi \api -> do
-        updateStore $ Store.EnableWallet { id: wallet.id, api: api }
-        H.modify_ \state -> case state of
-          Success choice -> Success choice { selected = Just wallet }
-          _ -> state
+      logMessage $ "Wallet selected: " <> show wallet.id
+      isWalletEnabled <- enableWallet wallet.id
+      when isWalletEnabled $ H.modify_ \state -> case state of
+        Success choice -> Success choice { selected = Just wallet }
+        _ -> state
+      pure unit
 
     DeselectWallet -> do
       logMessage "Wallet deselected"
       H.modify_ \state -> case state of
         Success choice -> Success choice { selected = Nothing }
         _ -> state
-      updateStore $ Store.DisableWallet
+      disableWallet
 
     RaiseReloadWallet -> do
       H.raise ReloadWallet
@@ -143,7 +133,7 @@ component =
     HH.div [ css "navbar-item" ]
       [ HH.div [ css "navbar-link", HE.onClick \_ -> ShowHint ]
           [ HH.text "No wallets available" ]
-      , whenElem (toDo == VisibleHint) \_ -> renderInstallWalletHint
+      , whenElem (toDo == Hint) \_ -> renderHint
       ]
 
   render (Success { wallets, selected: Nothing }) =
@@ -151,7 +141,7 @@ component =
       [ HH.div [ css "navbar-link" ]
           [ HH.text "Wallets" ]
       , HH.div [ css "navbar-dropdown is-right" ]
-          (renderDropDownItem <$> wallets)
+          (renderDropDownItem <$> toArray wallets)
       ]
 
   render (Success { wallets: _, selected: Just wallet }) =
@@ -194,8 +184,8 @@ component =
           ]
       ]
 
-  renderInstallWalletHint :: H.ComponentHTML Action () m
-  renderInstallWalletHint =
+  renderHint :: H.ComponentHTML Action () m
+  renderHint =
     HH.div [ css "modal is-active" ]
       [ HH.div [ css "modal-background" ]
           []
@@ -224,9 +214,9 @@ component =
                           ]
                       ]
                   , HH.p_
-                      [ HH.text "You can get test ADA from the "
+                      [ HH.text "Furthermore, you can get test ADA from the "
                       , HH.a [ HP.href "https://docs.cardano.org/cardano-testnet/tools/faucet" ] [ HH.text "Cardano testnet faucets" ]
-                      , HH.text "."
+                      , HH.text " for testing purposes."
                       ]
                   ]
               ]

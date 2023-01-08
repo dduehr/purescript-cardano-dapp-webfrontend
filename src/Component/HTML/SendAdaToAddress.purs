@@ -2,7 +2,6 @@ module Frontend.Component.HTML.SendAdaToAddress (component) where
 
 import Prelude
 
-import Control.Monad.State.Class (get)
 import Csl as CS
 import Data.Either (Either(..))
 import Data.Foldable (for_)
@@ -29,8 +28,8 @@ type Output = Maybe TxId
 
 type Form :: (Type -> Type -> Type -> Type) -> Row Type
 type Form f =
-  ( recipient :: f String FormError CS.Address
-  , amount :: f String FormError CS.BigNum
+  ( recipientAddress :: f String FormError CS.Address
+  , lovelaceAmount :: f String FormError CS.BigNum
   )
 
 type FormContext = F.FormContext (Form F.FieldState) (Form (F.FieldAction Action)) Input Action
@@ -48,8 +47,8 @@ type State =
 component
   :: ∀ query m
    . MonadAff m
-  => MonadStore Store.Action Store.Store m
   => ManageAddress m
+  => MonadStore Store.Action Store.Store m
   => H.Component query Input Output m
 component =
   F.formless { liftAction: Eval } mempty $ connect selectAll $ H.mkComponent
@@ -76,44 +75,43 @@ component =
     let
       validation :: { | Form F.FieldValidation }
       validation =
-        { recipient: bech32Format
-        , amount: bigNumFormat
+        { recipientAddress: bech32Format
+        , lovelaceAmount: bigNumFormat
         }
     F.handleSubmitValidate onSubmit F.validate validation
 
   onSubmit :: { | Form F.FieldOutput } -> H.HalogenM _ _ _ _ _ Unit
   onSubmit fields = do
-    { store } <- get
-    for_ store.wallet \wallet -> do
-      mbTxId <- sendAdaToAddress wallet.api
-        { recipientAddress: fields.recipient
-        , lovelaceAmount: fields.amount
+    { store: { mbWalletCredentials } } <- H.get
+    for_ mbWalletCredentials \walletCredentials -> do
+      mbTxId <- sendAdaToAddress walletCredentials.api
+        { recipientAddress: fields.recipientAddress
+        , lovelaceAmount: fields.lovelaceAmount
         }
       F.raise mbTxId
-    pure unit
 
   render :: State -> H.ComponentHTML Action () m
-  render { store: { wallet }, form: { formActions, fields, actions } } =
+  render { store: { mbWalletCredentials }, form: { formActions, fields, actions } } =
     HH.form [ css "pl-3 mt-3", HE.onSubmit formActions.handleSubmit ]
       [ HH.div [ css "field" ]
           [ HH.label [ css "label" ]
               [ HH.text "Address where to send ADA" ]
           , HH.div [ css "control has-icons-left" ]
               [ HH.input
-                  [ case fields.recipient.result of
+                  [ case fields.recipientAddress.result of
                       Nothing -> css "input"
                       Just (Left _) -> css "input is-danger"
                       Just (Right _) -> css "input is-success"
                   , HP.type_ HP.InputText
                   , HP.placeholder "e.g. addr_test1qrt..."
                   , HP.required true
-                  , HE.onValueInput actions.recipient.handleChange
-                  , HE.onBlur actions.recipient.handleBlur
+                  , HE.onValueInput actions.recipientAddress.handleChange
+                  , HE.onBlur actions.recipientAddress.handleBlur
                   ]
               , HH.span [ css "icon is-small is-left" ]
                   [ HH.i [ css "fa fa-solid fa-address-card" ] [] ]
               ]
-          , case fields.recipient.result of
+          , case fields.recipientAddress.result of
               Just (Left err) -> HH.div [ css "content is-small has-text-danger" ] [ HH.text err ]
               _ -> HH.div_ []
           ]
@@ -122,25 +120,25 @@ component =
               [ HH.text "Lovelaces (1 000 000 Lovelace = 1 ADA)" ]
           , HH.div [ css "control has-icons-left" ]
               [ HH.input
-                  [ case fields.amount.result of
+                  [ case fields.lovelaceAmount.result of
                       Nothing -> css "input"
                       Just (Left _) -> css "input is-danger"
                       Just (Right _) -> css "input is-success"
                   , HP.type_ HP.InputText
                   , HP.placeholder "e.g. 1000000"
                   , HP.required true
-                  , HE.onValueInput actions.amount.handleChange
-                  , HE.onBlur actions.amount.handleBlur
+                  , HE.onValueInput actions.lovelaceAmount.handleChange
+                  , HE.onBlur actions.lovelaceAmount.handleBlur
                   ]
               , HH.span [ css "icon is-small is-left" ]
                   [ HH.i [ css "fa fa-solid fa-coins" ] [] ]
               ]
-          , case fields.amount.result of
+          , case fields.lovelaceAmount.result of
               Just (Left err) -> HH.div [ css "content is-small has-text-danger" ] [ HH.text err ]
               _ -> HH.div_ []
           ]
       , HH.div [ css "field" ]
-          [ HH.button [ css "button is-medium is-success", HP.disabled $ isNothing wallet ]
+          [ HH.button [ css "button is-medium is-success", HP.disabled $ isNothing mbWalletCredentials ]
               [ HH.text "Submit" ]
           ]
       ]
