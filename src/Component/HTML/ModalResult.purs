@@ -9,11 +9,10 @@ import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties.ARIA as HA
 
-import Frontend.Component.HTML.Utils (css)
-import Frontend.Data.Tx (TxId)
-import Frontend.Data.Result (Result(..))
-
 import Frontend.Capability.LogMessages (class LogMessages, logMessage)
+import Frontend.Component.HTML.Utils (css)
+import Frontend.Data.Result (Result(..))
+import Frontend.Data.Tx (TxId)
 
 data Query a = Show (Result TxId) a
 

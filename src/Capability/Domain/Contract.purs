@@ -1,4 +1,4 @@
-module Frontend.Capability.Resource.Contract where
+module Frontend.Capability.Domain.Contract where
 
 import Prelude
 

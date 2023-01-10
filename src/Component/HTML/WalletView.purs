@@ -22,9 +22,9 @@ import Halogen.Store.Monad (class MonadStore)
 import Halogen.Store.Select (Selector, select)
 import Type.Proxy (Proxy(..))
 
+import Frontend.Capability.Domain.Browser (class ManageBrowser, getWallet)
+import Frontend.Capability.Domain.Wallet (class ManageWallet, getWalletNetworkId, getWalletBalance, getWalletChangeAddress, getWalletRewardAddresses, getWalletUsedAddresses, getWalletUtxos)
 import Frontend.Component.HTML.Utils (css)
-import Frontend.Capability.Resource.Browser (class ManageBrowser, getWallet)
-import Frontend.Capability.Resource.Wallet (class ManageWallet, getNetworkId, getBalance, getChangeAddress, getRewardAddresses, getUsedAddresses, getUtxos)
 import Frontend.Data.Wallet (WalletApi, WalletCredentials, WalletId)
 import Frontend.Store (Action, Store) as Store
 
@@ -89,7 +89,7 @@ component =
       H.put $ Received (Just walletCredentials)
       mbWallet <- H.lift $ runMaybeT $ do
         wallet <- MaybeT $ getWallet walletCredentials.id
-        networkId <- MaybeT $ getNetworkId walletCredentials.api
+        networkId <- MaybeT $ getWalletNetworkId walletCredentials.api
         pure
           { id: walletCredentials.id
           , name: wallet.name
@@ -111,23 +111,23 @@ component =
       case state of
         Loaded wallet -> do
           H.modify_ \state' -> set (_Loaded <<< _balance) Nothing state'
-          balance <- getBalance wallet.api
+          balance <- getWalletBalance wallet.api
           H.modify_ \state' -> set (_Loaded <<< _balance) balance state'
 
           H.modify_ \state' -> set (_Loaded <<< _changeAddress) Nothing state'
-          changeAddress <- getChangeAddress wallet.api
+          changeAddress <- getWalletChangeAddress wallet.api
           H.modify_ \state' -> set (_Loaded <<< _changeAddress) changeAddress state'
 
           H.modify_ \state' -> set (_Loaded <<< _rewardAddresses) Nothing state'
-          rewardAddresses <- getRewardAddresses wallet.api
+          rewardAddresses <- getWalletRewardAddresses wallet.api
           H.modify_ \state' -> set (_Loaded <<< _rewardAddresses) rewardAddresses state'
 
           H.modify_ \state' -> set (_Loaded <<< _usedAddresses) Nothing state'
-          usedAddresses <- getUsedAddresses wallet.api
+          usedAddresses <- getWalletUsedAddresses wallet.api
           H.modify_ \state' -> set (_Loaded <<< _usedAddresses) usedAddresses state'
 
           H.modify_ \state' -> set (_Loaded <<< _utxos) Nothing state'
-          utxos <- getUtxos wallet.api
+          utxos <- getWalletUtxos wallet.api
           H.modify_ \state' -> set (_Loaded <<< _utxos) utxos state'
 
         _ -> pure unit

@@ -1,4 +1,4 @@
-module Frontend.Capability.Resource.Browser where
+module Frontend.Capability.Domain.Browser where
 
 import Prelude
 

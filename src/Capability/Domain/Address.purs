@@ -1,4 +1,4 @@
-module Frontend.Capability.Resource.Address where
+module Frontend.Capability.Domain.Address where
 
 import Prelude
 

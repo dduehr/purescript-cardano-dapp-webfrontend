@@ -16,7 +16,7 @@ import Halogen.Store.Connect (Connected, connect)
 import Halogen.Store.Monad (class MonadStore)
 import Halogen.Store.Select (selectAll)
 
-import Frontend.Capability.Resource.Address (class ManageAddress, sendAdaToAddress)
+import Frontend.Capability.Domain.Address (class ManageAddress, sendAdaToAddress)
 import Frontend.Component.HTML.Utils (css)
 import Frontend.Data.Tx (TxId)
 import Frontend.Form.Validation (FormError, bech32Format, bigNumFormat)
