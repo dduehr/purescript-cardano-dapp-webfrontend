@@ -5,7 +5,6 @@ import Prelude
 import Data.Maybe (Maybe(..))
 import Data.Array.NonEmpty (NonEmptyArray, toArray)
 import Data.Time.Duration (Milliseconds(..))
-import Effect.Aff as Aff
 import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.HTML as HH
@@ -16,7 +15,7 @@ import Network.RemoteData (RemoteData(..))
 
 import Frontend.Capability.Domain.Browser (class ManageBrowser, disableWallet, enableWallet, getWallets)
 import Frontend.Capability.LogMessages (class LogMessages, logMessage)
-import Frontend.Component.HTML.Utils (css, whenElem)
+import Frontend.Component.HTML.Utils (css, delayAction, whenElem)
 import Frontend.Data.Wallet (WalletId)
 
 type State = RemoteData InCaseOfNoWallets Choice
@@ -73,7 +72,7 @@ component =
   handleAction = case _ of
     Initialize -> do
       H.put Loading
-      _ <- H.fork $ delayAction FindWallets $ Milliseconds 1000.0
+      _ <- H.fork $ delayAction (Milliseconds 1000.0) handleAction FindWallets
       pure unit
 
     FindWallets -> do
@@ -105,12 +104,6 @@ component =
 
     RaiseReloadWallet -> do
       H.raise ReloadWallet
-
-  -- FIXME: Move to capabilities to get rid of the type class constraint MonadAff 
-  delayAction :: Action -> Milliseconds -> H.HalogenM State Action () Output m Unit
-  delayAction action ms = do
-    H.liftAff $ Aff.delay ms
-    handleAction action
 
   render :: State -> H.ComponentHTML Action () m
   render NotAsked =

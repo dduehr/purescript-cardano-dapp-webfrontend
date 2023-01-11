@@ -17,6 +17,8 @@ import Data.Traversable (for_)
 import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.HTML as HH
+import Halogen.Query.HalogenM (ForkId, kill)
+import Data.Time.Duration (Milliseconds(..))
 import Halogen.Store.Connect (Connected, connect)
 import Halogen.Store.Monad (class MonadStore)
 import Halogen.Store.Select (Selector, select)
@@ -24,7 +26,7 @@ import Type.Proxy (Proxy(..))
 
 import Frontend.Capability.Domain.Browser (class ManageBrowser, getWallet)
 import Frontend.Capability.Domain.Wallet (class ManageWallet, getWalletNetworkId, getWalletBalance, getWalletChangeAddress, getWalletRewardAddresses, getWalletUsedAddresses, getWalletUtxos)
-import Frontend.Component.HTML.Utils (css)
+import Frontend.Component.HTML.Utils (css, repeatAction)
 import Frontend.Data.Wallet (WalletApi, WalletCredentials, WalletId)
 import Frontend.Store (Action, Store) as Store
 
@@ -32,11 +34,16 @@ type Input = Unit
 
 data Query a = ReloadWallet a
 
-type Context = Maybe WalletCredentials
+type StoreContext = Maybe WalletCredentials
+
+type WalletContext =
+  { wallet :: Wallet
+  , reloadScheduler :: ForkId
+  }
 
 data State
-  = Received Context
-  | Loaded Wallet
+  = Received StoreContext
+  | Loaded WalletContext
 
 type Wallet =
   { id :: WalletId
@@ -52,7 +59,7 @@ type Wallet =
   }
 
 data Action
-  = Receive (Connected Context Input)
+  = Receive (Connected StoreContext Input)
   | Reload
 
 component
@@ -74,18 +81,20 @@ component =
     }
   where
 
-  selectContext :: Selector Store.Store Context
+  selectContext :: Selector Store.Store StoreContext
   selectContext = select (\a b -> (_.id <$> a) == (_.id <$> b)) \store -> store.mbWalletCredentials
 
-  deriveState :: Connected Context Input -> State
+  deriveState :: Connected StoreContext Input -> State
   deriveState { context: mbWalletCredentials } = Received mbWalletCredentials
 
   handleAction :: Action -> H.HalogenM State Action () output m Unit
   handleAction = case _ of
-    Receive { context: Nothing } ->
+    Receive { context: Nothing } -> do
+      killReloadScheduler
       H.put $ Received Nothing
 
     Receive { context: Just walletCredentials } -> do
+      killReloadScheduler
       H.put $ Received (Just walletCredentials)
       mbWallet <- H.lift $ runMaybeT $ do
         wallet <- MaybeT $ getWallet walletCredentials.id
@@ -103,32 +112,34 @@ component =
           , utxos: Nothing
           }
       for_ mbWallet \wallet -> do
-        H.put $ Loaded wallet
+        reloadScheduler <- H.fork $ repeatAction (Milliseconds 30000.0) handleAction Reload
+        H.put $ Loaded { wallet, reloadScheduler }
         handleAction Reload
 
     Reload -> do
       state <- H.get
       case state of
-        Loaded wallet -> do
-          H.modify_ \state' -> set (_Loaded <<< _balance) Nothing state'
+        Loaded { wallet } -> do
+          -- FIXME: Code duplication
+          H.modify_ \state' -> set (_Loaded <<< _wallet <<< _balance) Nothing state'
           balance <- getWalletBalance wallet.api
-          H.modify_ \state' -> set (_Loaded <<< _balance) balance state'
+          H.modify_ \state' -> set (_Loaded <<< _wallet <<< _balance) balance state'
 
-          H.modify_ \state' -> set (_Loaded <<< _changeAddress) Nothing state'
+          H.modify_ \state' -> set (_Loaded <<< _wallet <<< _changeAddress) Nothing state'
           changeAddress <- getWalletChangeAddress wallet.api
-          H.modify_ \state' -> set (_Loaded <<< _changeAddress) changeAddress state'
+          H.modify_ \state' -> set (_Loaded <<< _wallet <<< _changeAddress) changeAddress state'
 
-          H.modify_ \state' -> set (_Loaded <<< _rewardAddresses) Nothing state'
+          H.modify_ \state' -> set (_Loaded <<< _wallet <<< _rewardAddresses) Nothing state'
           rewardAddresses <- getWalletRewardAddresses wallet.api
-          H.modify_ \state' -> set (_Loaded <<< _rewardAddresses) rewardAddresses state'
+          H.modify_ \state' -> set (_Loaded <<< _wallet <<< _rewardAddresses) rewardAddresses state'
 
-          H.modify_ \state' -> set (_Loaded <<< _usedAddresses) Nothing state'
+          H.modify_ \state' -> set (_Loaded <<< _wallet <<< _usedAddresses) Nothing state'
           usedAddresses <- getWalletUsedAddresses wallet.api
-          H.modify_ \state' -> set (_Loaded <<< _usedAddresses) usedAddresses state'
+          H.modify_ \state' -> set (_Loaded <<< _wallet <<< _usedAddresses) usedAddresses state'
 
-          H.modify_ \state' -> set (_Loaded <<< _utxos) Nothing state'
+          H.modify_ \state' -> set (_Loaded <<< _wallet <<< _utxos) Nothing state'
           utxos <- getWalletUtxos wallet.api
-          H.modify_ \state' -> set (_Loaded <<< _utxos) utxos state'
+          H.modify_ \state' -> set (_Loaded <<< _wallet <<< _utxos) utxos state'
 
         _ -> pure unit
 
@@ -138,10 +149,13 @@ component =
       _ <- handleAction Reload
       pure $ Just a
 
-  _Loaded :: Prism' State Wallet
+  _Loaded :: Prism' State WalletContext
   _Loaded = prism' Loaded case _ of
-    Loaded wallet -> Just wallet
+    Loaded context -> Just context
     _ -> Nothing
+
+  _wallet :: Lens' WalletContext Wallet
+  _wallet = prop (Proxy :: Proxy "wallet")
 
   _balance :: Lens' Wallet (Maybe CS.BigNum)
   _balance = prop (Proxy :: Proxy "balance")
@@ -158,6 +172,13 @@ component =
   _utxos :: Lens' Wallet (Maybe (Array CS.TxUnspentOut))
   _utxos = prop (Proxy :: Proxy "utxos")
 
+  killReloadScheduler :: H.HalogenM State Action () output m Unit
+  killReloadScheduler = do 
+      state <- H.get
+      case state of
+        Loaded { reloadScheduler } -> kill reloadScheduler
+        _ -> pure unit
+
   render :: State -> H.ComponentHTML Action () m
   render (Received context) =
     HH.div [ css "card p-4" ]
@@ -166,14 +187,14 @@ component =
       , renderContext context
       ]
 
-  render (Loaded wallet) =
+  render (Loaded { wallet }) =
     HH.div [ css "card p-4" ]
       [ HH.h2 [ css "title is-5 mb-3" ]
           [ HH.text "Wallet" ]
       , renderWallet wallet
       ]
 
-  renderContext :: ∀ w i. Context -> HH.HTML w i
+  renderContext :: ∀ w i. StoreContext -> HH.HTML w i
   renderContext Nothing =
     HH.text "No wallet connected"
 
