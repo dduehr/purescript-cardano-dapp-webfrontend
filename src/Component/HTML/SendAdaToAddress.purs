@@ -51,7 +51,7 @@ component
   => MonadStore Store.Action Store.Store m
   => H.Component query Input Output m
 component =
-  F.formless { liftAction: Eval } mempty $ connect selectAll $ H.mkComponent
+  F.formless { liftAction: Eval, validateOnChange: true } mempty $ connect selectAll $ H.mkComponent
     { initialState: deriveState
     , render
     , eval: H.mkEval $ H.defaultEval
@@ -91,7 +91,7 @@ component =
       F.raise mbTxId
 
   render :: State -> H.ComponentHTML Action () m
-  render { store: { mbWalletCredentials }, form: { formActions, fields, actions } } =
+  render { store: { mbWalletCredentials }, form: { formState, formActions, fields, actions } } =
     HH.form [ css "pl-3 mt-3", HE.onSubmit formActions.handleSubmit ]
       [ HH.div [ css "field" ]
           [ HH.label [ css "label" ]
@@ -138,7 +138,10 @@ component =
               _ -> HH.div_ []
           ]
       , HH.div [ css "field" ]
-          [ HH.button [ css "button is-medium is-success", HP.disabled $ isNothing mbWalletCredentials ]
+          [ HH.button
+              [ css "button is-medium is-success"
+              , HP.disabled $ isNothing mbWalletCredentials || not formState.allTouched || formState.errorCount > 0
+              ]
               [ HH.text "Submit" ]
           ]
       ]

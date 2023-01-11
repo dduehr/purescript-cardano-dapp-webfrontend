@@ -11,7 +11,7 @@ import Halogen.Store.Monad (class MonadStore, getStore)
 
 import Frontend.Capability.Domain.Address (SendAdaToAddressFields, SendTokenToAddressFields)
 import Frontend.Capability.Infrastructure.Cip30.WalletApi
-  ( class ManageWalletApi 
+  ( class ManageWalletApi
   , getWalletChangeAddress
   , getWalletUtxos
   , signTx
