@@ -16,6 +16,7 @@ import Halogen.HTML.Events as HE
 import Halogen.Store.Monad (class MonadStore)
 import Type.Proxy (Proxy(..))
 
+import Frontend.Api.Utils (enumValues)
 import Frontend.Capability.Domain.Address (class ManageAddress)
 import Frontend.Capability.Domain.Browser (class ManageBrowser)
 import Frontend.Capability.Domain.Contract (class ManageContract)
@@ -96,11 +97,11 @@ component =
           -- FIXME: aria...
           , HH.div [ css "dropdown-menu" {-, id="dropdown-menu" role="menu" -} ]
               [ HH.div [ css "dropdown-content" ]
-                  (renderMenuLabelWithDivider selected <$> menuItems)
+                  (renderMenuLabelWithDivider selected <$> enumValues)
               ]
           ]
       , HH.div_
-          (renderMenuContent selected <$> menuItems)
+          (renderMenuContent selected <$> enumValues)
       , HH.slot_ (Proxy :: _ "modalResult") unit ModalResult.component unit
       ]
 
@@ -111,7 +112,6 @@ component =
     else HH.a [ css "dropdown-item", HE.onClick \_ -> Select menuItem ]
       [ HH.text $ menuLabel menuItem ]
 
-  -- TODO: maybeElem or whenElem
   renderMenuLabelWithDivider :: MenuItem -> MenuItem -> H.ComponentHTML Action Slots m
   renderMenuLabelWithDivider selected menuItem =
     if menuItem == SendTokenToAddress then HH.div_
@@ -120,19 +120,12 @@ component =
       ]
     else renderMenuLabel selected menuItem
 
-  -- FIXME: use whenElem
   renderMenuContent :: MenuItem -> MenuItem -> H.ComponentHTML Action Slots m
   renderMenuContent selected menuItem =
     if menuItem == selected then HH.div_
       [ menuContent menuItem ]
     else HH.div [ css "is-hidden" ]
       [ menuContent menuItem ]
-
-  -- TODO: generalize to Utils
-  menuItems :: Array MenuItem
-  menuItems = unfoldr (\maybeItem -> maybeItem >>= next) $ Just genericBottom
-    where
-    next menuItem = Just $ Tuple menuItem $ genericSucc menuItem
 
   menuLabel :: MenuItem -> String
   menuLabel SendAdaToAddress = "Send ADA to Public Key Address"

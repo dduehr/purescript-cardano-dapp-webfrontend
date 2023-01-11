@@ -173,11 +173,11 @@ component =
   _utxos = prop (Proxy :: Proxy "utxos")
 
   killReloadScheduler :: H.HalogenM State Action () output m Unit
-  killReloadScheduler = do 
-      state <- H.get
-      case state of
-        Loaded { reloadScheduler } -> kill reloadScheduler
-        _ -> pure unit
+  killReloadScheduler = do
+    state <- H.get
+    case state of
+      Loaded { reloadScheduler } -> kill reloadScheduler
+      _ -> pure unit
 
   render :: State -> H.ComponentHTML Action () m
   render (Received context) =
