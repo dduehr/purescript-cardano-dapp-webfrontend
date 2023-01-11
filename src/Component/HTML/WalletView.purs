@@ -338,4 +338,4 @@ component =
   renderSpinner :: ∀ w i. HH.HTML w i
   renderSpinner =
     HH.span [ css "icon is-small" ]
-      [ HH.i [ css "fa fa-solid fa-spinner fa-spin" ] [] ]
+      [ HH.i [ css "fas fa-solid fa-spinner fa-spin" ] [] ]

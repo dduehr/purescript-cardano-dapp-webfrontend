@@ -109,7 +109,7 @@ component =
                   , HE.onBlur actions.recipientAddress.handleBlur
                   ]
               , HH.span [ css "icon is-small is-left" ]
-                  [ HH.i [ css "fa fa-solid fa-address-card" ] [] ]
+                  [ HH.i [ css "fas fa-solid fa-address-card" ] [] ]
               ]
           , case fields.recipientAddress.result of
               Just (Left err) -> HH.div [ css "content is-small has-text-danger" ] [ HH.text err ]
@@ -131,7 +131,7 @@ component =
                   , HE.onBlur actions.lovelaceAmount.handleBlur
                   ]
               , HH.span [ css "icon is-small is-left" ]
-                  [ HH.i [ css "fa fa-solid fa-coins" ] [] ]
+                  [ HH.i [ css "fas fa-solid fa-coins" ] [] ]
               ]
           , case fields.lovelaceAmount.result of
               Just (Left err) -> HH.div [ css "content is-small has-text-danger" ] [ HH.text err ]
