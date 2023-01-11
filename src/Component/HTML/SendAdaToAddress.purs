@@ -19,7 +19,7 @@ import Halogen.Store.Select (selectAll)
 import Frontend.Capability.Domain.Address (class ManageAddress, sendAdaToAddress)
 import Frontend.Component.HTML.Utils (css)
 import Frontend.Data.Tx (TxId)
-import Frontend.Form.Validation (FormError, bech32Format, bigNumFormat)
+import Frontend.Form.Validation (FormError, bech32Format, bigNumFormat, notLessThanBigNum, requiredText)
 import Frontend.Store as Store
 
 type Input = Unit
@@ -75,8 +75,8 @@ component =
     let
       validation :: { | Form F.FieldValidation }
       validation =
-        { recipientAddress: bech32Format
-        , lovelaceAmount: bigNumFormat
+        { recipientAddress: bech32Format <=< requiredText
+        , lovelaceAmount: (notLessThanBigNum "the minimum UTXO value" "969750") <=< bigNumFormat <=< requiredText
         }
     F.handleSubmitValidate onSubmit F.validate validation
 
@@ -104,7 +104,6 @@ component =
                       Just (Right _) -> css "input is-success"
                   , HP.type_ HP.InputText
                   , HP.placeholder "e.g. addr_test1qrt..."
-                  , HP.required true
                   , HE.onValueInput actions.recipientAddress.handleChange
                   , HE.onBlur actions.recipientAddress.handleBlur
                   ]
@@ -126,7 +125,6 @@ component =
                       Just (Right _) -> css "input is-success"
                   , HP.type_ HP.InputText
                   , HP.placeholder "e.g. 1000000"
-                  , HP.required true
                   , HE.onValueInput actions.lovelaceAmount.handleChange
                   , HE.onBlur actions.lovelaceAmount.handleBlur
                   ]
