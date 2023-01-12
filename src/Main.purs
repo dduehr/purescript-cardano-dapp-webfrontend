@@ -3,21 +3,31 @@ module Main (main) where
 import Prelude
 
 import Csl (TxBuilderConfig, bigNum, linearFee, txBuilderConfigBuilder) as CS
+import Data.Int (toNumber)
 import Data.Maybe (Maybe(..))
+import Data.Time.Duration (Seconds(..))
 import Effect (Effect)
 import Halogen.Aff as HA
 import Halogen.VDom.Driver (runUI)
 
 import Frontend.AppM (runAppM)
 import Frontend.Page.Root (component) as Root
+import Frontend.Store (Store) as Store
 
 main :: Effect Unit
 main = HA.runHalogenAff do
   body <- HA.awaitBody
-  let initialStore = { mbWalletCredentials: Nothing, mbTxBuilderConfig, blacklistedWallets }
   rootComponent <- runAppM initialStore Root.component
   runUI rootComponent unit body
   where
+
+  initialStore :: Store.Store
+  initialStore =
+    { mbWalletCredentials: Nothing
+    , mbWalletReloadSec: Just $ Seconds (toNumber 60)
+    , mbTxBuilderConfig
+    , blacklistedWallets: [ "ccvault" ]
+    }
 
   mbTxBuilderConfig :: Maybe CS.TxBuilderConfig
   mbTxBuilderConfig = do
@@ -35,6 +45,3 @@ main = HA.runHalogenAff do
       $ flip CS.txBuilderConfigBuilder.poolDeposit poolDeposit
       $ flip CS.txBuilderConfigBuilder.feeAlgo (CS.linearFee.new feeCoefficient feeConstant)
       $ CS.txBuilderConfigBuilder.new
-
-  blacklistedWallets :: Array String
-  blacklistedWallets = [ "ccvault" ]

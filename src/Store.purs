@@ -2,11 +2,13 @@ module Frontend.Store where
 
 import Csl (TxBuilderConfig) as CS
 import Data.Maybe (Maybe(..))
+import Data.Time.Duration (Seconds)
 
 import Frontend.Data.Wallet (WalletCredentials)
 
 type Store =
   { mbWalletCredentials :: Maybe WalletCredentials
+  , mbWalletReloadSec :: Maybe Seconds
   , mbTxBuilderConfig :: Maybe CS.TxBuilderConfig
   , blacklistedWallets :: Array String
   }

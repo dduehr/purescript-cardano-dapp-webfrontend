@@ -13,14 +13,14 @@ import Data.Int (floor)
 import Data.Lens (Lens', Prism', prism', set)
 import Data.Lens.Record (prop)
 import Data.Maybe (Maybe(..))
+import Data.Time.Duration (convertDuration)
 import Data.Traversable (for_)
 import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.Query.HalogenM (ForkId, kill)
-import Data.Time.Duration (Milliseconds(..))
 import Halogen.Store.Connect (Connected, connect)
-import Halogen.Store.Monad (class MonadStore)
+import Halogen.Store.Monad (class MonadStore, getStore)
 import Halogen.Store.Select (Selector, select)
 import Type.Proxy (Proxy(..))
 
@@ -38,7 +38,7 @@ type StoreContext = Maybe WalletCredentials
 
 type WalletContext =
   { wallet :: Wallet
-  , reloadScheduler :: ForkId
+  , mbReloadSchedulerForkId :: Maybe ForkId
   }
 
 data State
@@ -112,8 +112,14 @@ component =
           , utxos: Nothing
           }
       for_ mbWallet \wallet -> do
-        reloadScheduler <- H.fork $ repeatAction (Milliseconds 30000.0) handleAction Reload
-        H.put $ Loaded { wallet, reloadScheduler }
+        { mbWalletReloadSec } <- getStore
+        mbReloadSchedulerForkId <- case mbWalletReloadSec of
+          Just seconds -> do
+            forkId <- H.fork $ repeatAction (convertDuration seconds) handleAction Reload
+            pure $ Just forkId
+          Nothing ->
+            pure Nothing
+        H.put $ Loaded { wallet, mbReloadSchedulerForkId }
         handleAction Reload
 
     Reload -> do
@@ -149,6 +155,13 @@ component =
       _ <- handleAction Reload
       pure $ Just a
 
+  killReloadScheduler :: H.HalogenM State Action () output m Unit
+  killReloadScheduler = do
+    state <- H.get
+    case state of
+      Loaded { mbReloadSchedulerForkId: Just forkId } -> kill forkId
+      _ -> pure unit
+
   _Loaded :: Prism' State WalletContext
   _Loaded = prism' Loaded case _ of
     Loaded context -> Just context
@@ -171,13 +184,6 @@ component =
 
   _utxos :: Lens' Wallet (Maybe (Array CS.TxUnspentOut))
   _utxos = prop (Proxy :: Proxy "utxos")
-
-  killReloadScheduler :: H.HalogenM State Action () output m Unit
-  killReloadScheduler = do
-    state <- H.get
-    case state of
-      Loaded { reloadScheduler } -> kill reloadScheduler
-      _ -> pure unit
 
   render :: State -> H.ComponentHTML Action () m
   render (Received context) =

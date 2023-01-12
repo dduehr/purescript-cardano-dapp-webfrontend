@@ -3,12 +3,9 @@ module Frontend.Component.HTML.WalletActions where
 import Prelude
 
 import Data.Bounded.Generic (genericBottom)
-import Data.Enum.Generic (genericSucc)
 import Data.Generic.Rep (class Generic)
-import Data.Maybe (Maybe(..), maybe)
+import Data.Maybe (Maybe, maybe)
 import Data.Show.Generic (genericShow)
-import Data.Tuple (Tuple(..))
-import Data.Unfoldable (unfoldr)
 import Effect.Aff.Class (class MonadAff)
 import Halogen as H
 import Halogen.HTML as HH
