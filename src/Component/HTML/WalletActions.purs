@@ -26,12 +26,15 @@ import Frontend.Component.HTML.SendAdaToAddress (component) as SendAdaToAddress
 import Frontend.Component.HTML.SendAdaToContract (component) as SendAdaToContract
 import Frontend.Component.HTML.SendTokenToAddress (component) as SendTokenToAddress
 import Frontend.Component.HTML.SendTokenToContract (component) as SendTokenToContract
-import Frontend.Component.HTML.Utils (css)
+import Frontend.Component.HTML.Utils (css, whenElem)
 import Frontend.Data.Result (Result(..))
 import Frontend.Data.Tx (TxId)
 import Frontend.Store as Store
 
-data State = Selected MenuItem
+type State =
+  { isDropDownActive :: Boolean
+  , menuItemSelected :: MenuItem
+  }
 
 data MenuItem
   = SendAdaToAddress
@@ -47,7 +50,8 @@ instance Show MenuItem where
   show = genericShow
 
 data Action
-  = Select MenuItem
+  = ToggleMenu
+  | Select MenuItem
   | HandleResult (Maybe TxId)
 
 type Slots =
@@ -72,33 +76,33 @@ component
   => H.Component query input output m
 component =
   H.mkComponent
-    { initialState: const $ Selected genericBottom
+    { initialState: const $ { isDropDownActive: false, menuItemSelected: genericBottom }
     , render
     , eval: H.mkEval $ H.defaultEval { handleAction = handleAction }
     }
   where
 
   render :: State -> H.ComponentHTML Action Slots m
-  render (Selected selected) =
+  render { isDropDownActive, menuItemSelected } =
     HH.div [ css "card p-4" ]
-      [ HH.div [ css "dropdown is-hoverable" ]
+      [ HH.div [ css ("dropdown" <> if isDropDownActive then " is-active" else "") ]
           [ HH.div [ css "dropdown-trigger" ]
               -- FIXME: aria...
-              [ HH.h3 [ css "title is-5 pl-0 ml-0 mb-3" {-, aria-haspopup="true" aria-controls="dropdown-menu" -} ]
-                  [ HH.text $ menuLabel selected
+              [ HH.h3 [ css "title is-5 pl-0 ml-0 mb-3 is-clickable" {-, aria-haspopup="true" aria-controls="dropdown-menu" -} , HE.onClick \_ -> ToggleMenu ]
+                  [ HH.text $ menuLabel menuItemSelected
                   , HH.text " "
                   , HH.span [ css "icon is-small" ]
-                      [ HH.i [ css "fas fa-angle-down" {-, aria-hidden="true" -} ] [] ]
+                      [ HH.i [ css ("fas " <> if isDropDownActive then "fa-angle-up" else "fa-angle-down") {-, aria-hidden="true" -} ] [] ]
                   ]
               ]
           -- FIXME: aria...
-          , HH.div [ css "dropdown-menu" {-, id="dropdown-menu" role="menu" -} ]
+          , whenElem isDropDownActive \_ -> HH.div [ css "dropdown-menu" {-, id="dropdown-menu" role="menu" -} ]
               [ HH.div [ css "dropdown-content" ]
-                  (renderMenuLabelWithDivider selected <$> enumValues)
+                  (renderMenuLabelWithDivider menuItemSelected <$> enumValues)
               ]
           ]
       , HH.div_
-          (renderMenuContent selected <$> enumValues)
+          (renderMenuContent menuItemSelected <$> enumValues)
       , HH.slot_ (Proxy :: _ "modalResult") unit ModalResult.component unit
       ]
 
@@ -142,7 +146,9 @@ component =
 
   handleAction :: Action -> H.HalogenM State Action Slots output m Unit
   handleAction = case _ of
+    ToggleMenu ->
+      H.modify_ \state -> state { isDropDownActive = not state.isDropDownActive }
     Select menuItem ->
-      H.put $ Selected menuItem
+      H.put $ { isDropDownActive: false, menuItemSelected: menuItem }
     HandleResult result ->
       H.tell (Proxy :: _ "modalResult") unit (ModalResult.Show $ maybe Failure Success result)
