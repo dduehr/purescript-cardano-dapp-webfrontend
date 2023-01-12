@@ -42,3 +42,7 @@ repeatAction ms handleAction action = do
   delayAction ms handleAction action
   repeatAction ms handleAction action
 
+spinner :: ∀ w i. HH.HTML w i
+spinner =
+  HH.span [ css "icon is-small" ]
+    [ HH.i [ css "fas fa-solid fa-spinner fa-spin" ] [] ]

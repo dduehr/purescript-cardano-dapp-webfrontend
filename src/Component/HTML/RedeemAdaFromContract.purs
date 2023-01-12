@@ -44,7 +44,7 @@ component =
   render :: State -> H.ComponentHTML Action () m
   render _ =
     HH.form_ -- TODO: disabled if (isNothing state)
-      [ HH.text "TODO: RedeemAdaFromContract ..."
+      [ HH.text "TODO: RedeemAdaFromContract…"
       ]
 
   handleAction :: Action -> H.HalogenM State Action () Output m Unit

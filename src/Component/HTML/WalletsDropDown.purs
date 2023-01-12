@@ -15,7 +15,7 @@ import Network.RemoteData (RemoteData(..))
 
 import Frontend.Capability.Domain.Browser (class ManageBrowser, disableWallet, enableWallet, getWallets)
 import Frontend.Capability.LogMessages (class LogMessages, logMessage)
-import Frontend.Component.HTML.Utils (css, delayAction, whenElem)
+import Frontend.Component.HTML.Utils (css, delayAction, spinner, whenElem)
 import Frontend.Data.Wallet (WalletId)
 
 type State = RemoteData InCaseOfNoWallets Choice
@@ -115,10 +115,9 @@ component =
   render Loading =
     HH.div [ css "navbar-item" ]
       [ HH.div [ css "navbar-link" ]
-          [ HH.span [ css "icon is-small" ]
-              [ HH.i [ css "fas fa-solid fa-spinner fa-spin" ] [] ]
+          [ spinner
           , HH.small [ css "pl-2" ]
-              [ HH.text "Identifying wallets ..." ]
+              [ HH.text "Identifying wallets…" ]
           ]
       ]
 

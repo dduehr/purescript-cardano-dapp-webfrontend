@@ -103,7 +103,7 @@ component =
                       Just (Left _) -> css "input is-danger"
                       Just (Right _) -> css "input is-success"
                   , HP.type_ HP.InputText
-                  , HP.placeholder "e.g. addr_test1qrt..."
+                  , HP.placeholder "e.g. addr_test1qrt…"
                   , HE.onValueInput actions.recipientAddress.handleChange
                   , HE.onBlur actions.recipientAddress.handleBlur
                   ]
