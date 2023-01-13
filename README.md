@@ -95,7 +95,7 @@ Thanks to Dimitry Shibaev et al. for their React JS boilerplate project. It is i
 
 * [Cardano DApp Wallet Connector — A JavaScript and React JS app](https://github.com/dynamicstrategies/cardano-wallet-connector)
 
-And in particular I'd like to thank Thomas Honeyman et al. for Halogen and also the "Real World Application". I learned a lot.
+And in particular I'd like to thank Thomas Honeyman et al. for Halogen and also the "Real World Application". I learned a lot and still do.
 
 * [Halogen — A type-safe library for building user interfaces in PureScript](https://github.com/purescript-halogen/purescript-halogen)
 * [Real World Halogen — Large enough to demonstrate real world examples](https://github.com/thomashoneyman/purescript-halogen-realworld)
