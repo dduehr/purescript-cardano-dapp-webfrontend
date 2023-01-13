@@ -76,9 +76,9 @@ component =
       , HH.br_
       , HH.text "Transaction ID: "
       , HH.span [ css "is-family-monospace" ]
-          [ HH.text $ take 7 txId ]
+          [ HH.text $ take 16 txId ]
       , HH.text "… "
-      , HH.a [ HA.label "copy", HE.onClick \_ -> Copy txId ]
+      , HH.a [ HA.label "copy is-clickable", HE.onClick \_ -> Copy txId ]
           [ HH.span [ css "icon is-small" ]
               [ HH.i [ css "fas fa-copy", HA.hidden "true" ] [] ]
           ]

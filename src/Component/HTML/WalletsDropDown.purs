@@ -18,7 +18,10 @@ import Frontend.Capability.LogMessages (class LogMessages, logMessage)
 import Frontend.Component.HTML.Utils (css, delayAction, spinner, whenElem)
 import Frontend.Data.Wallet (WalletId)
 
-type State = RemoteData InCaseOfNoWallets Choice
+type State =
+  { remoteData :: RemoteData InCaseOfNoWallets Choice
+  , isDropDownActive :: Boolean
+  }
 
 data InCaseOfNoWallets
   = Hint
@@ -41,6 +44,7 @@ type Wallet =
 data Action
   = Initialize
   | FindWallets
+  | ToggleMenu
   | SelectWallet Wallet
   | DeselectWallet
   | RaiseReloadWallet
@@ -59,7 +63,7 @@ component
   => H.Component query input Output m
 component =
   H.mkComponent
-    { initialState: const NotAsked
+    { initialState: const { remoteData: NotAsked, isDropDownActive: false }
     , render
     , eval: H.mkEval H.defaultEval
         { handleAction = handleAction
@@ -71,78 +75,94 @@ component =
   handleAction :: Action -> H.HalogenM State Action () Output m Unit
   handleAction = case _ of
     Initialize -> do
-      H.put Loading
+      H.modify_ \state -> state { remoteData = Loading }
       _ <- H.fork $ delayAction (Milliseconds 1000.0) handleAction FindWallets
       pure unit
 
     FindWallets -> do
       mbWallets <- getWallets
-      H.put $ case mbWallets of
-        Just wallets -> Success { wallets: wallets, selected: Nothing }
-        _ -> Failure Hint
+      let
+        result = case mbWallets of
+          Just wallets -> Success { wallets: wallets, selected: Nothing }
+          _ -> Failure Hint
+      H.modify_ \state -> state { remoteData = result }
 
     HideHint -> do
-      H.put $ Failure NoHint
+      H.modify_ \state -> state { remoteData = Failure NoHint }
 
-    ShowHint -> do
-      H.put $ Failure Hint
+    ShowHint ->
+      H.modify_ \state -> state { remoteData = Failure Hint }
+
+    ToggleMenu ->
+      H.modify_ \state -> state { isDropDownActive = not state.isDropDownActive }
 
     SelectWallet wallet -> do
+      H.modify_ \state -> state { isDropDownActive = false }
       logMessage $ "Wallet selected: " <> show wallet.id
       isWalletEnabled <- enableWallet wallet.id
-      when isWalletEnabled $ H.modify_ \state -> case state of
-        Success choice -> Success choice { selected = Just wallet }
+      when isWalletEnabled $ H.modify_ \state -> case state.remoteData of
+        Success choice -> state { remoteData = Success choice { selected = Just wallet } }
         _ -> state
       pure unit
 
     DeselectWallet -> do
+      H.modify_ \state -> state { isDropDownActive = false }
       logMessage "Wallet deselected"
-      H.modify_ \state -> case state of
-        Success choice -> Success choice { selected = Nothing }
+      H.modify_ \state -> case state.remoteData of
+        Success choice -> state { remoteData = Success choice { selected = Nothing } }
         _ -> state
       disableWallet
 
     RaiseReloadWallet -> do
+      H.modify_ \state -> state { isDropDownActive = false }
       H.raise ReloadWallet
 
   render :: State -> H.ComponentHTML Action () m
-  render NotAsked =
+  render { remoteData: NotAsked } =
     HH.div [ css "navbar-item" ]
       [ HH.div_
           [ HH.text "Wallets" ]
       ]
 
-  render Loading =
+  render { remoteData: Loading } =
     HH.div [ css "navbar-item" ]
-      [ HH.div [ css "navbar-link" ]
+      [ HH.div [ css "navbar-item" ]
           [ spinner
-          , HH.small [ css "pl-2" ]
+          , HH.span [ css "pl-2 pr-4" ]
               [ HH.text "Identifying wallets…" ]
           ]
       ]
 
-  render (Failure toDo) =
+  render { remoteData: (Failure toDo) } =
     HH.div [ css "navbar-item" ]
-      [ HH.div [ css "navbar-link", HE.onClick \_ -> ShowHint ]
-          [ HH.text "No wallets available" ]
+      [ HH.div [ css "navbar-item is-clickable", HE.onClick \_ -> ShowHint ]
+          [ HH.span [ css "pr-4" ]
+              [ HH.text "No wallets available" ]
+          ]
       , whenElem (toDo == Hint) \_ -> renderHint
       ]
 
-  render (Success { wallets, selected: Nothing }) =
-    HH.div [ css "navbar-item has-dropdown is-hoverable" ]
-      [ HH.div [ css "navbar-link" ]
-          [ HH.text "Wallets" ]
+  render { remoteData: (Success { wallets, selected: Nothing }), isDropDownActive } =
+    HH.div [ css ("navbar-item has-dropdown" <> if isDropDownActive then " is-active" else "") ]
+      [ HH.div [ css "navbar-item is-clickable", HE.onClick \_ -> ToggleMenu ]
+          [ HH.span_
+              [ HH.text "Wallets" ]
+          , HH.span [ css "icon is-small pl-4 pr-4" ]
+              [ HH.i [ css ("fas " <> if isDropDownActive then "fa-angle-up" else "fa-angle-down") {-, aria-hidden="true" -} ] [] ]
+          ]
       , HH.div [ css "navbar-dropdown is-right" ]
           (renderDropDownItem <$> toArray wallets)
       ]
 
-  render (Success { wallets: _, selected: Just wallet }) =
-    HH.div [ css "navbar-item has-dropdown is-hoverable" ]
-      [ HH.div [ css "navbar-link" ]
+  render { remoteData: (Success { wallets: _, selected: Just wallet }), isDropDownActive } =
+    HH.div [ css ("navbar-item has-dropdown" <> if isDropDownActive then " is-active" else "") ]
+      [ HH.div [ css "navbar-item is-clickable", HE.onClick \_ -> ToggleMenu ]
           [ HH.span [ css "icon is-small" ]
               [ HH.img [ HP.src wallet.icon ] ]
-          , HH.small [ css "pl-2" ]
+          , HH.span [ css "pl-2" ]
               [ HH.text wallet.name ]
+          , HH.span [ css "icon is-small pl-4 pr-4" ]
+              [ HH.i [ css ("fas " <> if isDropDownActive then "fa-angle-up" else "fa-angle-down") {-, aria-hidden="true" -} ] [] ]
           ]
       , HH.div [ css "navbar-dropdown is-right" ]
           [ HH.a [ css "navbar-item pr-4", HE.onClick \_ -> RaiseReloadWallet ]
