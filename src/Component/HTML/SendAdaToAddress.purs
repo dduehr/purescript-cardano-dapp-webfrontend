@@ -3,9 +3,8 @@ module Frontend.Component.HTML.SendAdaToAddress (component) where
 import Prelude
 
 import Csl as CS
-import Data.Either (Either(..))
 import Data.Foldable (for_)
-import Data.Maybe (Maybe(..), isNothing)
+import Data.Maybe (Maybe(..))
 import Effect.Aff.Class (class MonadAff)
 import Formless as F
 import Halogen as H
@@ -19,6 +18,7 @@ import Halogen.Store.Select (selectAll)
 import Frontend.Api.Domain.Address (class ManageAddress, sendAdaToAddress)
 import Frontend.Component.HTML.Utils (css)
 import Frontend.Data.Tx (TxId)
+import Frontend.Form.Fields (stringInput, submitButton) as Fields
 import Frontend.Form.Validation (FormError, bech32Format, bigNumFormat, notLessThanBigNum, requiredText)
 import Frontend.Store as Store
 
@@ -93,53 +93,15 @@ component =
   render :: State -> H.ComponentHTML Action () m
   render { store: { mbWalletCredentials }, form: { formState, formActions, fields, actions } } =
     HH.form [ css "pl-3 mt-3", HE.onSubmit formActions.handleSubmit ]
-      [ HH.div [ css "field" ]
-          [ HH.label [ css "label" ]
-              [ HH.text "Address where to send ADA" ]
-          , HH.div [ css "control has-icons-left" ]
-              [ HH.input
-                  [ case fields.recipientAddress.result of
-                      Nothing -> css "input"
-                      Just (Left _) -> css "input is-danger"
-                      Just (Right _) -> css "input is-success"
-                  , HP.type_ HP.InputText
-                  , HP.placeholder "e.g. addr_test1qrt…"
-                  , HE.onValueInput actions.recipientAddress.handleChange
-                  , HE.onBlur actions.recipientAddress.handleBlur
-                  ]
-              , HH.span [ css "icon is-small is-left" ]
-                  [ HH.i [ css "fas fa-solid fa-address-card" ] [] ]
-              ]
-          , case fields.recipientAddress.result of
-              Just (Left err) -> HH.div [ css "content is-small has-text-danger" ] [ HH.text err ]
-              _ -> HH.div_ []
-          ]
-      , HH.div [ css "field" ]
-          [ HH.label [ css "label" ]
-              [ HH.text "Lovelaces (1 000 000 Lovelace = 1 ADA)" ]
-          , HH.div [ css "control has-icons-left" ]
-              [ HH.input
-                  [ case fields.lovelaceAmount.result of
-                      Nothing -> css "input"
-                      Just (Left _) -> css "input is-danger"
-                      Just (Right _) -> css "input is-success"
-                  , HP.type_ HP.InputText
-                  , HP.placeholder "e.g. 1000000"
-                  , HE.onValueInput actions.lovelaceAmount.handleChange
-                  , HE.onBlur actions.lovelaceAmount.handleBlur
-                  ]
-              , HH.span [ css "icon is-small is-left" ]
-                  [ HH.i [ css "fas fa-solid fa-coins" ] [] ]
-              ]
-          , case fields.lovelaceAmount.result of
-              Just (Left err) -> HH.div [ css "content is-small has-text-danger" ] [ HH.text err ]
-              _ -> HH.div_ []
-          ]
-      , HH.div [ css "field" ]
-          [ HH.button
-              [ css "button is-medium is-success"
-              , HP.disabled $ isNothing mbWalletCredentials || not formState.allTouched || formState.errorCount > 0
-              ]
-              [ HH.text "Submit" ]
-          ]
+      [ Fields.stringInput "Address where to send ADA"
+          { state: fields.recipientAddress, action: actions.recipientAddress }
+          [ HP.placeholder "e.g. addr_test1qrt…" ]
+          [ css "fas fa-solid fa-address-card" ]
+      , Fields.stringInput "Lovelaces (1 000 000 Lovelace = 1 ADA)"
+          { state: fields.lovelaceAmount, action: actions.lovelaceAmount }
+          [ HP.placeholder "e.g. 1500000" ]
+          [ css "fas fa-solid fa-coins" ]
+      , Fields.submitButton "Submit"
+          formState
+          mbWalletCredentials
       ]
