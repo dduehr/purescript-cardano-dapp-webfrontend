@@ -13,12 +13,12 @@ import Halogen.HTML.Events as HE
 import Halogen.Store.Monad (class MonadStore)
 import Type.Proxy (Proxy(..))
 
-import Frontend.Api.Utils (enumValues)
-import Frontend.Capability.Domain.Address (class ManageAddress)
-import Frontend.Capability.Domain.Browser (class ManageBrowser)
-import Frontend.Capability.Domain.Contract (class ManageContract)
-import Frontend.Capability.Domain.Wallet (class ManageWallet)
-import Frontend.Capability.LogMessages (class LogMessages)
+import Frontend.Api.Domain.Address (class ManageAddress)
+import Frontend.Api.Domain.Browser (class ManageBrowser)
+import Frontend.Api.Domain.Contract (class ManageContract)
+import Frontend.Api.Domain.Wallet (class ManageWallet)
+import Frontend.Api.LogMessages (class LogMessages)
+import Frontend.Capability.Utils (enumValues)
 import Frontend.Component.HTML.ModalResult (Query(..), component) as ModalResult
 import Frontend.Component.HTML.RedeemAdaFromContract (component) as RedeemAdaFromContract
 import Frontend.Component.HTML.RedeemTokenFromContract (component) as RedeemTokenFromContract

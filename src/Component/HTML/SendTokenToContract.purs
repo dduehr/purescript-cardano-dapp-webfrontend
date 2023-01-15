@@ -9,7 +9,7 @@ import Halogen.Store.Connect (Connected, connect)
 import Halogen.Store.Monad (class MonadStore)
 import Halogen.Store.Select (selectAll)
 
-import Frontend.Capability.Domain.Contract (class ManageContract)
+import Frontend.Api.Domain.Contract (class ManageContract)
 import Frontend.Data.Tx (TxId)
 import Frontend.Store (Action, Store) as Store
 

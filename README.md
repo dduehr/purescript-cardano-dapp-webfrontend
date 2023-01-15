@@ -19,7 +19,7 @@ A live demo can be found at https://bit.ly/purescript-cardano-dapp-webfrontend.
 
 ## Installation
 
-Unless already done install the Node package manager [`npm`](https://docs.npmjs.com/), see [Downloading and installing Node.js and npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
+Unless already done, install the Node package manager [`npm`](https://docs.npmjs.com/), see [Downloading and installing Node.js and npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
 
 Additionally required are the PureScript compiler [`purs`](https://www.npmjs.com/package/purescript), the PureScript syntax tidy-upper [`purs-tidy`](https://www.npmjs.com/package/purs-tidy), the PureScript package manager [`spago`](https://www.npmjs.com/package/spago) and the JavaScript bundler and minifier [`esbuild`](https://www.npmjs.com/package/esbuild). 
 
@@ -58,22 +58,20 @@ Overview of the `npm run` scripts:
 | build | Compile the PureScript files |
 | bundle | Bundle the PureScript files into one file in the folder `bundle` |
 | dist | Package the application files into the folder `dist` for distribution |
-| serve | Serve the application from the distribution folder `dist` |
+| serve | Serve the application from the distribution folder `dist` from http://localhost:8080/ |
 | clean | Remove the generated script artifacts |
 
 The scripts are executed incrementally in the order specified above. For instance, if you run `dist` to create the distribution files, the scripts `format`, `build` and `bundle` are executed beforehand automatically .
 
 ## Design
 
-The application is structured corresponding to the blog post [Three Layer Haskell Cake](https://www.parsonsmatt.org/2018/03/22/three_layer_haskell_cake.html) by Matt Parsons and in particular inspired by the [Real World Halogen](https://github.com/thomashoneyman/purescript-halogen-realworld) application by Thomas Honeyman.
+The application is structured corresponding to the blog post [Three Layer Haskell Cake](https://www.parsonsmatt.org/2018/03/22/three_layer_haskell_cake.html) by Matt Parsons and is in particular inspired by the [Real World Halogen](https://github.com/thomashoneyman/purescript-halogen-realworld) application by Thomas Honeyman.
 
-I.e. the module `AppM` serves as orchestrating "Layer 1". It wires up capabilities to actual implementations. No business code here.
+I.e. the module `AppM` serves as orchestrating "Layer 1". It wires up abstract API definitions to actual implementations. No business code here.
 
-The capabilities in turn serve as interfaces, specified by the "Layer 2" type classes. They are divided into "domain" and "infrastructure" capabilities. The latter mock out external dependencies i.e. to the Cardano CIP-30 wallet and the Cardano serialization library. The "domain" capabilities are an abstraction of the application use cases and their business logic. 
+The API is constituted by the "Layer 2" type classes. It is divided into a "Domain API" and "Infrastructure API". The latter mocks out external dependencies i.e. to the Cardano CIP-30 wallet and the Cardano serialization library. The "Domain API" is an abstraction of the application use cases and their business logic. 
 
-"Layer 3" implements these type classes in forms of the application API.
-
-(In this context, probably should capabilites an api switch names.)
+"Layer 3" implements the type classes in forms of capabilities.
 
 ## Distribution
 

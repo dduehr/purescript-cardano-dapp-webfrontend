@@ -1,4 +1,4 @@
-module Frontend.Capability.LogMessages where
+module Frontend.Api.LogMessages where
 
 import Prelude
 

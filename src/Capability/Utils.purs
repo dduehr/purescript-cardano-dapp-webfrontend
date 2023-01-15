@@ -1,4 +1,4 @@
-module Frontend.Api.Utils (enumValues, maybeEffect, maybeAff) where
+module Frontend.Capability.Utils (enumValues, maybeEffect, maybeAff) where
 
 import Prelude
 
@@ -15,7 +15,7 @@ import Effect.Aff.Class (class MonadAff, liftAff)
 import Effect.Class (class MonadEffect, liftEffect)
 import Effect.Exception (try)
 
-import Frontend.Capability.LogMessages (class LogMessages, logMessage)
+import Frontend.Api.LogMessages (class LogMessages, logMessage)
 
 enumValues :: ∀ t a rep. Unfoldable t => Generic a rep => GenericEnum rep => GenericBottom rep => t a
 enumValues = unfoldr (\maybeValue -> maybeValue >>= next) $ Just genericBottom

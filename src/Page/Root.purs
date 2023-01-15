@@ -10,11 +10,11 @@ import Halogen.HTML.Properties as HP
 import Halogen.Store.Monad (class MonadStore)
 import Type.Proxy (Proxy(..))
 
-import Frontend.Capability.Domain.Address (class ManageAddress)
-import Frontend.Capability.Domain.Browser (class ManageBrowser)
-import Frontend.Capability.Domain.Contract (class ManageContract)
-import Frontend.Capability.Domain.Wallet (class ManageWallet)
-import Frontend.Capability.LogMessages (class LogMessages)
+import Frontend.Api.Domain.Address (class ManageAddress)
+import Frontend.Api.Domain.Browser (class ManageBrowser)
+import Frontend.Api.Domain.Contract (class ManageContract)
+import Frontend.Api.Domain.Wallet (class ManageWallet)
+import Frontend.Api.LogMessages (class LogMessages)
 import Frontend.Component.HTML.Utils (css)
 import Frontend.Component.HTML.WalletActions (component) as WalletActions
 import Frontend.Component.HTML.WalletView (component, Query(..)) as WalletView

@@ -2,43 +2,20 @@ module Frontend.Capability.Domain.Contract where
 
 import Prelude
 
-import Csl (Address) as CS
-import Data.Maybe (Maybe)
-import Halogen (HalogenM, lift) as H
+import Data.Maybe (Maybe(..))
 
+import Frontend.Api.Domain.Contract (RedeemAdaFromContractFields, RedeemTokenFromContractFields, SendAdaToContractFields, SendTokenToContractFields)
 import Frontend.Data.Tx (TxId)
 import Frontend.Data.Wallet (WalletApi)
 
-class Monad m <= ManageContract m where
-  sendAdaToContract :: WalletApi -> SendAdaToContractFields -> m (Maybe TxId)
-  sendTokenToContract :: WalletApi -> SendTokenToContractFields -> m (Maybe TxId)
-  redeemAdaFromContract :: WalletApi -> RedeemAdaFromContractFields -> m (Maybe TxId)
-  redeemTokenFromContract :: WalletApi -> RedeemTokenFromContractFields -> m (Maybe TxId)
+sendAdaToContract :: ∀ m. Monad m => WalletApi -> SendAdaToContractFields -> m (Maybe TxId)
+sendAdaToContract _ _ = pure Nothing
 
-instance manageContractHalogenM ::
-  ManageContract m =>
-  ManageContract (H.HalogenM state action slots output m) where
-  sendAdaToContract api = H.lift <<< sendAdaToContract api
-  sendTokenToContract api = H.lift <<< sendTokenToContract api
-  redeemAdaFromContract api = H.lift <<< redeemAdaFromContract api
-  redeemTokenFromContract api = H.lift <<< redeemTokenFromContract api
+sendTokenToContract :: ∀ m. Monad m => WalletApi -> SendTokenToContractFields -> m (Maybe TxId)
+sendTokenToContract _ _ = pure Nothing
 
-type SendAdaToContractFields =
-  { contractAddress :: CS.Address
-  -- TBD ...
-  }
+redeemAdaFromContract :: ∀ m. Monad m => WalletApi -> RedeemAdaFromContractFields -> m (Maybe TxId)
+redeemAdaFromContract _ _ = pure Nothing
 
-type SendTokenToContractFields =
-  { contractAddress :: CS.Address
-  -- TBD ...
-  }
-
-type RedeemAdaFromContractFields =
-  { contractAddress :: CS.Address
-  -- TBD ...
-  }
-
-type RedeemTokenFromContractFields =
-  { contractAddress :: CS.Address
-  -- TBD ...
-  }
+redeemTokenFromContract :: ∀ m. Monad m => WalletApi -> RedeemTokenFromContractFields -> m (Maybe TxId)
+redeemTokenFromContract _ _ = pure Nothing

@@ -13,8 +13,8 @@ import Halogen.HTML.Properties as HP
 import Halogen.HTML.Properties.ARIA as HA
 import Network.RemoteData (RemoteData(..))
 
-import Frontend.Capability.Domain.Browser (class ManageBrowser, disableWallet, enableWallet, getWallets)
-import Frontend.Capability.LogMessages (class LogMessages, logMessage)
+import Frontend.Api.Domain.Browser (class ManageBrowser, disableWallet, enableWallet, getWallets)
+import Frontend.Api.LogMessages (class LogMessages, logMessage)
 import Frontend.Component.HTML.Utils (css, delayAction, spinner, whenElem)
 import Frontend.Data.Wallet (WalletId)
 

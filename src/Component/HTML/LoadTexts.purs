@@ -1,4 +1,4 @@
-module Frondend.Component.LoadTexts where
+module Frontend.Component.LoadTexts where
 
 import Prelude
 
@@ -7,7 +7,7 @@ import Data.Maybe (Maybe(..))
 import Halogen as H
 import Halogen.HTML as HH
 
-import Frontend.Capability.Domain.Wallet (class ManageWallet)
+import Frontend.Api.Domain.Wallet (class ManageWallet)
 import Frontend.Component.HTML.Utils (css, spinner, whenElem)
 
 type Input = Unit

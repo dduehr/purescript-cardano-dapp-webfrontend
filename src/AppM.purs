@@ -10,25 +10,25 @@ import Halogen as H
 import Halogen.Store.Monad (class MonadStore, StoreT, runStoreT)
 import Safe.Coerce (coerce)
 
-import Frontend.Capability.Domain.Address (class ManageAddress) as Domain
-import Frontend.Capability.Domain.Browser (class ManageBrowser) as Domain
-import Frontend.Capability.Domain.Contract (class ManageContract) as Domain
-import Frontend.Capability.Domain.Wallet (class ManageWallet) as Domain
+import Frontend.Api.Domain.Address (class ManageAddress) as Domain
+import Frontend.Api.Domain.Browser (class ManageBrowser) as Domain
+import Frontend.Api.Domain.Contract (class ManageContract) as Domain
+import Frontend.Api.Domain.Wallet (class ManageWallet) as Domain
 
-import Frontend.Api.Domain.Address (sendAdaToAddress, sendTokenToAddress) as Domain
-import Frontend.Api.Domain.Browser (disableWallet, enableWallet, getWallet, getWallets) as Domain
-import Frontend.Api.Domain.Contract (redeemAdaFromContract, redeemTokenFromContract, sendAdaToContract, sendTokenToContract) as Domain
-import Frontend.Api.Domain.Wallet (getWalletBalance, getWalletChangeAddress, getWalletNetworkId, getWalletRewardAddresses, getWalletUsedAddresses, getWalletUtxos, signTx, submitTx) as Domain
+import Frontend.Capability.Domain.Address (sendAdaToAddress, sendTokenToAddress) as Domain
+import Frontend.Capability.Domain.Browser (disableWallet, enableWallet, getWallet, getWallets) as Domain
+import Frontend.Capability.Domain.Contract (redeemAdaFromContract, redeemTokenFromContract, sendAdaToContract, sendTokenToContract) as Domain
+import Frontend.Capability.Domain.Wallet (getWalletBalance, getWalletChangeAddress, getWalletNetworkId, getWalletRewardAddresses, getWalletUsedAddresses, getWalletUtxos, signTx, submitTx) as Domain
 
-import Frontend.Capability.Infrastructure.Cip30.Browser (class ManageBrowser) as Infrastructure
-import Frontend.Capability.Infrastructure.Cip30.WalletApi (class ManageWalletApi) as Infrastructure
-import Frontend.Capability.Infrastructure.Csl.Serialization (class ManageSerialization) as Infrastructure
+import Frontend.Api.Infrastructure.Cip30.Browser (class ManageBrowser) as Infrastructure
+import Frontend.Api.Infrastructure.Cip30.WalletApi (class ManageWalletXpi) as Infrastructure
+import Frontend.Api.Infrastructure.Csl.Serialization (class ManageSerialization) as Infrastructure
 
-import Frontend.Api.Infrastructure.Cip30.Browser (enableWalletApi, getAvailableWallets, getWalletApiVersion, getWalletIcon, getWalletName, isWalletAvailable) as Infrastructure
-import Frontend.Api.Infrastructure.Cip30.WalletApi (getWalletBalance, getWalletChangeAddress, getWalletNetworkId, getWalletRewardAddresses, getWalletUsedAddresses, getWalletUtxos, signTx, submitTx) as Infrastructure
-import Frontend.Api.Infrastructure.Csl.Serialization (newAuxiliaryData, newTxBuilder, newTxUnspentOuts, newWitnessSet, txBuilderAddChangeIfNeeded, txBuilderAddInsFrom, txBuilderAddOut, txBuilderBuild) as Infrastructure
+import Frontend.Capability.Infrastructure.Cip30.Browser (enableWalletXpi, getAvailableWallets, getWalletXpiVersion, getWalletIcon, getWalletName, isWalletAvailable) as Infrastructure
+import Frontend.Capability.Infrastructure.Cip30.WalletApi (getWalletBalance, getWalletChangeAddress, getWalletNetworkId, getWalletRewardAddresses, getWalletUsedAddresses, getWalletUtxos, signTx, submitTx) as Infrastructure
+import Frontend.Capability.Infrastructure.Csl.Serialization (newAuxiliaryData, newTxBuilder, newTxUnspentOuts, newWitnessSet, txBuilderAddChangeIfNeeded, txBuilderAddInsFrom, txBuilderAddOut, txBuilderBuild) as Infrastructure
 
-import Frontend.Capability.LogMessages (class LogMessages)
+import Frontend.Api.LogMessages (class LogMessages)
 import Frontend.Store (Action, Store, reduce) as Store
 
 newtype AppM a = AppM (StoreT Store.Action Store.Store Aff a)
@@ -74,12 +74,12 @@ instance domainManageContractAppM :: Domain.ManageContract AppM where
 instance infrastructureManageBrowserAppM :: Infrastructure.ManageBrowser AppM where
   getAvailableWallets = Infrastructure.getAvailableWallets
   isWalletAvailable = Infrastructure.isWalletAvailable
-  getWalletApiVersion = Infrastructure.getWalletApiVersion
+  getWalletXpiVersion = Infrastructure.getWalletXpiVersion
   getWalletIcon = Infrastructure.getWalletIcon
   getWalletName = Infrastructure.getWalletName
-  enableWalletApi = Infrastructure.enableWalletApi
+  enableWalletXpi = Infrastructure.enableWalletXpi
 
-instance infrastructureManageWalletApi :: Infrastructure.ManageWalletApi AppM where
+instance infrastructureManageWalletXpi :: Infrastructure.ManageWalletXpi AppM where
   getWalletBalance = Infrastructure.getWalletBalance
   getWalletChangeAddress = Infrastructure.getWalletChangeAddress
   getWalletNetworkId = Infrastructure.getWalletNetworkId

@@ -25,11 +25,11 @@ import Halogen.Store.Monad (class MonadStore, getStore)
 import Halogen.Store.Select (Selector, select)
 import Type.Proxy (Proxy(..))
 
-import Frondend.Component.LoadText as LoadText
-import Frondend.Component.LoadTexts as LoadTexts
-import Frontend.Capability.Domain.Browser (class ManageBrowser, getWallet)
-import Frontend.Capability.Domain.Wallet (class ManageWallet, getWalletNetworkId, getWalletBalance, getWalletChangeAddress, getWalletRewardAddresses, getWalletUsedAddresses, getWalletUtxos)
+import Frontend.Api.Domain.Browser (class ManageBrowser, getWallet)
+import Frontend.Api.Domain.Wallet (class ManageWallet, getWalletNetworkId, getWalletBalance, getWalletChangeAddress, getWalletRewardAddresses, getWalletUsedAddresses, getWalletUtxos)
 import Frontend.Component.HTML.Utils (css, repeatAction)
+import Frontend.Component.LoadText as LoadText
+import Frontend.Component.LoadTexts as LoadTexts
 import Frontend.Data.Wallet (WalletApi, WalletCredentials, WalletId)
 import Frontend.Store (Action, Store) as Store
 
