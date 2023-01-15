@@ -139,7 +139,7 @@ component =
   menuContent :: MenuItem -> H.ComponentHTML Action Slots m
   menuContent SendAdaToAddress = HH.slot (Proxy :: _ "sendAdaToAddress") unit SendAdaToAddress.component unit HandleResult
   menuContent SendTokenToAddress = HH.slot_ (Proxy :: _ "sendTokenToAddress") unit SendTokenToAddress.component unit
-  menuContent SendAdaToContract = HH.slot_ (Proxy :: _ "sendAdaToContract") unit SendAdaToContract.component unit
+  menuContent SendAdaToContract = HH.slot (Proxy :: _ "sendAdaToContract") unit SendAdaToContract.component unit HandleResult
   menuContent SendTokenToContract = HH.slot_ (Proxy :: _ "sendTokenToContract") unit SendTokenToContract.component unit
   menuContent RedeemAdaFromContract = HH.slot_ (Proxy :: _ "redeemAdaFromContract") unit RedeemAdaFromContract.component unit
   menuContent RedeemTokenFromContract = HH.slot_ (Proxy :: _ "redeemTokenFromContract") unit RedeemTokenFromContract.component unit

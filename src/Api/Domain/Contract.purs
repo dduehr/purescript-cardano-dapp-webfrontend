@@ -2,7 +2,7 @@ module Frontend.Api.Domain.Contract where
 
 import Prelude
 
-import Csl (Address) as CS
+import Csl (Address, BigNum) as CS
 import Data.Maybe (Maybe)
 import Halogen (HalogenM, lift) as H
 
@@ -25,7 +25,8 @@ instance manageContractHalogenM ::
 
 type SendAdaToContractFields =
   { contractAddress :: CS.Address
-  -- TBD ...
+  , lovelaceAmount :: CS.BigNum
+  , mbDatum :: Maybe String
   }
 
 type SendTokenToContractFields =

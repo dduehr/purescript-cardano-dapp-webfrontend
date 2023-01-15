@@ -4,7 +4,7 @@ import Prelude
 
 import Csl as CS
 import Data.Foldable (for_)
-import Data.Maybe (Maybe(..))
+import Data.Maybe (Maybe(..), isJust)
 import Effect.Aff.Class (class MonadAff)
 import Formless as F
 import Halogen as H
@@ -101,7 +101,8 @@ component =
           { state: fields.lovelaceAmount, action: actions.lovelaceAmount }
           [ HP.placeholder "e.g. 1500000" ]
           [ css "fas fa-solid fa-coins" ]
-      , Fields.submitButton "Submit"
-          formState
-          mbWalletCredentials
+      , Fields.submitButton "Submit" \_ -> formState.errorCount == 0
+          && isJust fields.recipientAddress.result
+          && isJust fields.lovelaceAmount.result
+          && isJust mbWalletCredentials
       ]

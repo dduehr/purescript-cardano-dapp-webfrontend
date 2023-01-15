@@ -3,7 +3,7 @@ module Frontend.Form.Fields where
 import Prelude
 
 import Data.Either (Either(..), either)
-import Data.Maybe (Maybe(..), isNothing)
+import Data.Maybe (Maybe(..))
 import DOM.HTML.Indexed (HTMLi, HTMLinput)
 import Formless as F
 import Halogen as H
@@ -12,7 +12,6 @@ import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
 
 import Frontend.Component.HTML.Utils (css, maybeElem)
-import Frontend.Data.Wallet (WalletCredentials)
 import Frontend.Form.Validation (FormError)
 
 type StringInput action output =
@@ -57,15 +56,14 @@ stringInput label { state, action } inputProperties iconProperties =
 submitButton
   :: forall i p
    . String
-  -> F.FormState
-  -> Maybe WalletCredentials
+  -> (Unit -> Boolean)
   -> HH.HTML i p
-submitButton label formState mbWalletCredentials =
+submitButton label enabled =
   HH.div [ css "field" ]
     [ HH.input
         [ css "button is-medium is-success"
         , HP.type_ HP.InputSubmit
-        , HP.disabled $ isNothing mbWalletCredentials || not formState.allTouched || formState.errorCount > 0
         , HP.value label
+        , HP.disabled (not enabled unit)
         ]
     ]
