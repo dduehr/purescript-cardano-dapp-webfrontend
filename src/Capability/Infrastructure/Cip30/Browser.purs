@@ -16,8 +16,8 @@ getAvailableWallets = MaybeT $ maybeEffect CW.availableWallets
 isWalletAvailable :: ∀ m. MonadEffect m => LogMessages m => CW.WalletName -> MaybeT m Boolean
 isWalletAvailable = MaybeT <<< maybeEffect <<< CW.isWalletAvailable
 
-getWalletXpiVersion :: ∀ m. MonadEffect m => LogMessages m => CW.WalletName -> MaybeT m String
-getWalletXpiVersion = MaybeT <<< maybeEffect <<< CW.getApiVersion
+getWalletApiVersion :: ∀ m. MonadEffect m => LogMessages m => CW.WalletName -> MaybeT m String
+getWalletApiVersion = MaybeT <<< maybeEffect <<< CW.getApiVersion
 
 getWalletIcon :: ∀ m. MonadEffect m => LogMessages m => CW.WalletName -> MaybeT m String
 getWalletIcon = MaybeT <<< maybeEffect <<< CW.getIcon
@@ -25,5 +25,5 @@ getWalletIcon = MaybeT <<< maybeEffect <<< CW.getIcon
 getWalletName :: ∀ m. MonadEffect m => LogMessages m => CW.WalletName -> MaybeT m String
 getWalletName = MaybeT <<< maybeEffect <<< CW.getName
 
-enableWalletXpi :: ∀ m. MonadAff m => LogMessages m => CW.WalletName -> MaybeT m CW.Api
-enableWalletXpi = MaybeT <<< maybeAff <<< CW.enable
+enableWalletApi :: ∀ m. MonadAff m => LogMessages m => CW.WalletName -> MaybeT m CW.Api
+enableWalletApi = MaybeT <<< maybeAff <<< CW.enable

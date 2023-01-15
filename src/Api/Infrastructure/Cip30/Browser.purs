@@ -8,8 +8,8 @@ import Control.Monad.Maybe.Trans (MaybeT)
 class Monad m <= ManageBrowser m where
   getAvailableWallets :: MaybeT m (Array CW.WalletName)
   isWalletAvailable :: CW.WalletName -> MaybeT m Boolean
-  getWalletXpiVersion :: CW.WalletName -> MaybeT m String
+  getWalletApiVersion :: CW.WalletName -> MaybeT m String
   getWalletIcon :: CW.WalletName -> MaybeT m String
   getWalletName :: CW.WalletName -> MaybeT m String
-  enableWalletXpi :: CW.WalletName -> MaybeT m CW.Api
+  enableWalletApi :: CW.WalletName -> MaybeT m CW.Api
 

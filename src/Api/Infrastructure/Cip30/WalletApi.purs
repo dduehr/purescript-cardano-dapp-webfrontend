@@ -7,7 +7,7 @@ import Cardano.Wallet (Api, NetworkId, Paginate) as CW
 import Control.Monad.Maybe.Trans (MaybeT)
 import Data.Maybe (Maybe)
 
-class Monad m <= ManageWalletXpi m where
+class Monad m <= ManageWalletApi m where
   getWalletBalance :: CW.Api -> MaybeT m CS.BigNum
   getWalletChangeAddress :: CW.Api -> MaybeT m CS.Address
   getWalletNetworkId :: CW.Api -> MaybeT m CW.NetworkId

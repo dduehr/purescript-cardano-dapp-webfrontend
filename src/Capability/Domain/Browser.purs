@@ -15,9 +15,9 @@ import Halogen.Store.Monad (class MonadStore, getStore, updateStore)
 
 import Frontend.Api.Infrastructure.Cip30.Browser
   ( class ManageBrowser
-  , enableWalletXpi
+  , enableWalletApi
   , getAvailableWallets
-  , getWalletXpiVersion
+  , getWalletApiVersion
   , getWalletIcon
   , getWalletName
   , isWalletAvailable
@@ -39,7 +39,7 @@ getWallet id = runMaybeT $ do
   isWalletAvailable <- Browser.isWalletAvailable id'
   if isWalletAvailable then do
     name <- Browser.getWalletName id'
-    apiVersion <- Browser.getWalletXpiVersion id'
+    apiVersion <- Browser.getWalletApiVersion id'
     icon <- Browser.getWalletIcon id'
     pure { id, name, apiVersion, icon }
   else
@@ -48,11 +48,11 @@ getWallet id = runMaybeT $ do
 enableWallet :: ∀ m. Browser.ManageBrowser m => MonadStore Store.Action Store.Store m => WalletId -> m (Boolean)
 enableWallet id = do
   let id' = unwrap id
-  mbXpi <- runMaybeT $ Browser.enableWalletXpi id'
-  updateStore case mbXpi of
+  mbApi <- runMaybeT $ Browser.enableWalletApi id'
+  updateStore case mbApi of
     Just api -> Store.EnableWallet { id, api }
     Nothing -> Store.DisableWallet
-  pure $ isJust mbXpi
+  pure $ isJust mbApi
 
 disableWallet :: ∀ m. Browser.ManageBrowser m => MonadStore Store.Action Store.Store m => m (Unit)
 disableWallet = updateStore Store.DisableWallet
