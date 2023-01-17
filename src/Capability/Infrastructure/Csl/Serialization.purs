@@ -32,3 +32,6 @@ txBuilderAddOut txBuilder = MaybeT <<< maybeEffect <<< CS.txBuilder.addOut txBui
 
 txBuilderBuild :: ∀ m. MonadEffect m => LogMessages m => CS.TxBuilder -> MaybeT m CS.TxBody
 txBuilderBuild = MaybeT <<< maybeEffect <<< CS.txBuilder.build
+
+txOutSetDataHash :: ∀ m. MonadEffect m => LogMessages m => CS.TxOut -> CS.DataHash -> MaybeT m Unit
+txOutSetDataHash txOut = MaybeT <<< maybeEffect <<< CS.txOut.setDataHash txOut

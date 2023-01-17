@@ -26,7 +26,7 @@ import Frontend.Api.Infrastructure.Csl.Serialization (class ManageSerialization)
 
 import Frontend.Capability.Infrastructure.Cip30.Browser (enableWalletApi, getAvailableWallets, getWalletApiVersion, getWalletIcon, getWalletName, isWalletAvailable) as Infrastructure
 import Frontend.Capability.Infrastructure.Cip30.WalletApi (getWalletBalance, getWalletChangeAddress, getWalletNetworkId, getWalletRewardAddresses, getWalletUsedAddresses, getWalletUtxos, signTx, submitTx) as Infrastructure
-import Frontend.Capability.Infrastructure.Csl.Serialization (newAuxiliaryData, newTxBuilder, newTxUnspentOuts, newWitnessSet, txBuilderAddChangeIfNeeded, txBuilderAddInsFrom, txBuilderAddOut, txBuilderBuild) as Infrastructure
+import Frontend.Capability.Infrastructure.Csl.Serialization (newAuxiliaryData, newTxBuilder, newTxUnspentOuts, newWitnessSet, txBuilderAddChangeIfNeeded, txBuilderAddInsFrom, txBuilderAddOut, txBuilderBuild, txOutSetDataHash) as Infrastructure
 
 import Frontend.Api.LogMessages (class LogMessages)
 import Frontend.Store (Action, Store, reduce) as Store
@@ -98,6 +98,7 @@ instance infrastructureManageSerialization :: Infrastructure.ManageSerialization
   txBuilderAddInsFrom = Infrastructure.txBuilderAddInsFrom
   txBuilderAddOut = Infrastructure.txBuilderAddOut
   txBuilderBuild = Infrastructure.txBuilderBuild
+  txOutSetDataHash = Infrastructure.txOutSetDataHash
 
 instance logMessagesAppM :: LogMessages AppM where
   logMessage = log

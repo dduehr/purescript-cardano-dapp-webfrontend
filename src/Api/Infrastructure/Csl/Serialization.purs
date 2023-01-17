@@ -3,7 +3,7 @@ module Frontend.Api.Infrastructure.Csl.Serialization where
 import Prelude
 
 import Control.Monad.Maybe.Trans (MaybeT)
-import Csl (Address, AuxiliaryData, TxBuilder, TxBody, TxBuilderConfig, TxOut, TxUnspentOut, TxUnspentOuts, TxWitnessSet) as CS
+import Csl (Address, AuxiliaryData, DataHash, TxBuilder, TxBody, TxBuilderConfig, TxOut, TxUnspentOut, TxUnspentOuts, TxWitnessSet) as CS
 
 class Monad m <= ManageSerialization m where
   newAuxiliaryData :: MaybeT m CS.AuxiliaryData
@@ -14,4 +14,5 @@ class Monad m <= ManageSerialization m where
   txBuilderAddInsFrom :: CS.TxBuilder -> CS.TxUnspentOuts -> Number -> MaybeT m Unit
   txBuilderAddOut :: CS.TxBuilder -> CS.TxOut -> MaybeT m Unit
   txBuilderBuild :: CS.TxBuilder -> MaybeT m CS.TxBody
+  txOutSetDataHash :: CS.TxOut -> CS.DataHash -> MaybeT m Unit
 

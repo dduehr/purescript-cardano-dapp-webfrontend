@@ -6,6 +6,7 @@ import Csl as CS
 import Data.Foldable (for_)
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..), isJust)
+import Data.TextEncoder (encodeUtf8)
 import Effect.Aff.Class (class MonadAff)
 import Formless as F
 import Halogen as H
@@ -31,7 +32,7 @@ type Form :: (Type -> Type -> Type -> Type) -> Row Type
 type Form f =
   ( contractAddress :: f String FormError CS.Address
   , lovelaceAmount :: f String FormError CS.BigNum
-  , mbDatum :: f String FormError (Maybe String)
+  , mbPlutusData :: f String FormError (Maybe CS.PlutusData)
   )
 
 type FormContext = F.FormContext (Form F.FieldState) (Form (F.FieldAction Action)) Input Action
@@ -79,7 +80,7 @@ component =
       validation =
         { contractAddress: bech32Format <=< requiredText
         , lovelaceAmount: (notLessThanBigNum "the minimum UTXO value" "969750") <=< bigNumFormat <=< requiredText
-        , mbDatum: Right <<< Just
+        , mbPlutusData: Right <<< Just <<< CS.plutusData.newBytes <<< encodeUtf8
         }
     F.handleSubmitValidate onSubmit F.validate validation
 
@@ -90,7 +91,7 @@ component =
       mbTxId <- sendAdaToContract walletCredentials.api
         { contractAddress: fields.contractAddress
         , lovelaceAmount: fields.lovelaceAmount
-        , mbDatum: fields.mbDatum
+        , mbPlutusData: fields.mbPlutusData
         }
       F.raise mbTxId
 
@@ -106,7 +107,7 @@ component =
           [ HP.placeholder "e.g. 1500000", HP.required true ]
           [ css "fas fa-solid fa-coins" ]
       , Fields.stringInput "Optional datum required by the redeemer to unlock the ADA from the contract again"
-          { state: fields.mbDatum, action: actions.mbDatum }
+          { state: fields.mbPlutusData, action: actions.mbPlutusData }
           [ HP.placeholder "Top Secret" ]
           [ css "fas fa-solid fa-key" ]
       , Fields.submitButton "Submit" \_ -> formState.errorCount == 0

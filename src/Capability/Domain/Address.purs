@@ -29,8 +29,8 @@ import Frontend.Api.Infrastructure.Csl.Serialization
   , txBuilderBuild
   ) as Serialization
 import Frontend.Api.LogMessages (class LogMessages, logMessage)
-import Frontend.Data.Wallet (WalletApi)
 import Frontend.Data.Tx (TxId)
+import Frontend.Data.Wallet (WalletApi)
 import Frontend.Store (Action, Store) as Store
 
 sendAdaToAddress
