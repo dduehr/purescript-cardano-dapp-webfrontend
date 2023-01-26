@@ -7,15 +7,15 @@
 [![Rust CSL](https://img.shields.io/badge/Rust%20CSL-v11.2.1-f66a00)](https://github.com/Emurgo/cardano-serialization-lib)
 [![Bulma CSS](https://img.shields.io/badge/Bulma%20CSS-v0.9.4-02d1b2)](https://bulma.io/)
 
-This is an exemplary Cardano dApp web-frontend application implemented with PureScript and the Halogen framework.
+This is an exemplary Cardano dApp web-frontend application implemented with the strongly-typed functional programming language PureScript and the Halogen UI framework.
 
 It offers the ability to interact with the Cardano blockchain by sending ADA and native tokens to public-key addresses or Plutus contracts or redeem these from Plutus Contracts. The features are not implemented completely yet.
-
-The application showcases a simple Cardano dApp web-frontend written with a strongly-typed functional programming language.
 
 It utilizes the PureScript interface to Cardano wallets as specified by [CIP 30 - Cardano dApp-Wallet Web Bridge](https://cips.cardano.org/cips/cip3).
 
 A live demo can be found at https://bit.ly/purescript-cardano-dapp-webfrontend.
+
+See also the [Plutus Guessing Game Deployment](https://github.com/dduehr/plutus-guessing-game-deployment) repository in order to create a Cardano blockchain address and CBOR representation of the [IOG Guessing Game](https://github.com/input-output-hk/plutus-apps/blob/v1.1.0/plutus-use-cases/src/Plutus/Contracts/Game.hs). The address and CBOR representation of the game can be used for the use-cases *"Send ADA to smart contract"* and *"Redeem ADA from smart contract"* of this exemplary Cardano dApp web-frontend application.
 
 ## Installation
 
