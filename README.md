@@ -11,7 +11,7 @@ This is an exemplary Cardano dApp web-frontend application implemented with the 
 
 It offers the ability to interact with the Cardano blockchain by sending ADA and native tokens to public-key addresses or Plutus contracts or redeem these from Plutus Contracts. The features are not implemented completely yet.
 
-It utilizes the PureScript interface to Cardano wallets as specified by [CIP 30 - Cardano dApp-Wallet Web Bridge](https://cips.cardano.org/cips/cip3).
+It utilizes the PureScript interface to Cardano wallets as specified by [CIP 30 - Cardano dApp-Wallet Web Bridge](https://cips.cardano.org/cips/cip30).
 
 A live demo can be found at https://bit.ly/purescript-cardano-dapp-webfrontend.
 
