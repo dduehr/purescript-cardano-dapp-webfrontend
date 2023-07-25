@@ -14,18 +14,20 @@ import Frontend.Api.Domain.Address (class ManageAddress)
 import Frontend.Api.Domain.Browser (class ManageBrowser)
 import Frontend.Api.Domain.Contract (class ManageContract)
 import Frontend.Api.Domain.Wallet (class ManageWallet)
-import Frontend.Api.LogMessages (class LogMessages)
+import Frontend.Api.LogMessages (class LogMessages, logMessage)
 import Frontend.Component.HTML.Utils (css)
-import Frontend.Component.HTML.WalletActions (component) as WalletActions
+import Frontend.Component.HTML.WalletActions (component, Message(..)) as WalletActions
 import Frontend.Component.HTML.WalletView (component, Query(..)) as WalletView
 import Frontend.Component.HTML.WalletsDropDown (component, Message(..)) as WalletsDropDown
 import Frontend.Store (Action, Store) as Store
 
-data Action = HandleWalletsDropDown WalletsDropDown.Message
+data Action
+  = HandleWalletsDropDown WalletsDropDown.Message
+  | HandleWalletActions WalletActions.Message
 
 type Slots =
   ( walletsDropDown :: ∀ query. H.Slot query WalletsDropDown.Message Unit
-  , walletActions :: ∀ query. H.Slot query Void Unit
+  , walletActions :: ∀ query. H.Slot query WalletActions.Message Unit
   , walletView :: H.Slot WalletView.Query Void Unit
   )
 
@@ -50,7 +52,12 @@ component =
 
   handleAction :: ∀ state. Action -> H.HalogenM state Action Slots output m Unit
   handleAction = case _ of
-    HandleWalletsDropDown WalletsDropDown.ReloadWallet ->
+    HandleWalletActions WalletActions.ReloadWallet -> do
+      logMessage "Delegating 'ReloadWallet' message from component WalletActions"
+      H.tell (Proxy :: _ "walletView") unit WalletView.ReloadWallet
+
+    HandleWalletsDropDown WalletsDropDown.ReloadWallet -> do
+      logMessage "Delegating 'ReloadWallet' message from component WalletsDropDown"
       H.tell (Proxy :: _ "walletView") unit WalletView.ReloadWallet
 
   render :: ∀ state. state -> H.ComponentHTML Action Slots m
@@ -74,7 +81,7 @@ component =
               ]
           ]
       , HH.section [ css "section pt-6 pb-0" ]
-          [ HH.slot_ (Proxy :: _ "walletActions") unit WalletActions.component unit ]
+          [ HH.slot (Proxy :: _ "walletActions") unit WalletActions.component unit HandleWalletActions ]
       , HH.section [ css "section pt-6" ]
           [ HH.slot_ (Proxy :: _ "walletView") unit WalletView.component unit ]
       ]

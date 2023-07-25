@@ -3,6 +3,7 @@ module Frontend.Component.HTML.WalletActions where
 import Prelude
 
 import Data.Bounded.Generic (genericBottom)
+import Data.Foldable (for_)
 import Data.Generic.Rep (class Generic)
 import Data.Maybe (Maybe, maybe)
 import Data.Show.Generic (genericShow)
@@ -54,6 +55,10 @@ data Action
   | Select MenuItem
   | HandleResult (Maybe TxId)
 
+type Output = Message
+
+data Message = ReloadWallet
+
 type Slots =
   ( sendAdaToAddress :: ∀ query. H.Slot query (Maybe TxId) Unit
   , sendTokenToAddress :: ∀ query. H.Slot query (Maybe TxId) Unit
@@ -65,7 +70,7 @@ type Slots =
   )
 
 component
-  :: ∀ query input output m
+  :: ∀ query input m
    . MonadAff m
   => ManageBrowser m
   => ManageWallet m
@@ -73,7 +78,7 @@ component
   => ManageContract m
   => LogMessages m
   => MonadStore Store.Action Store.Store m
-  => H.Component query input output m
+  => H.Component query input Output m
 component =
   H.mkComponent
     { initialState: const $ { isDropDownActive: false, menuItemSelected: genericBottom }
@@ -144,11 +149,14 @@ component =
   menuContent RedeemAdaFromContract = HH.slot_ (Proxy :: _ "redeemAdaFromContract") unit RedeemAdaFromContract.component unit
   menuContent RedeemTokenFromContract = HH.slot_ (Proxy :: _ "redeemTokenFromContract") unit RedeemTokenFromContract.component unit
 
-  handleAction :: Action -> H.HalogenM State Action Slots output m Unit
+  handleAction :: Action -> H.HalogenM State Action Slots Output m Unit
   handleAction = case _ of
     ToggleMenu ->
       H.modify_ \state -> state { isDropDownActive = not state.isDropDownActive }
+
     Select menuItem ->
       H.put $ { isDropDownActive: false, menuItemSelected: menuItem }
-    HandleResult result ->
+
+    HandleResult result -> do
+      for_ result \_ -> H.raise ReloadWallet
       H.tell (Proxy :: _ "modalResult") unit (ModalResult.Show $ maybe Failure Success result)
